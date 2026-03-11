@@ -1,0 +1,51 @@
+/* DARK THEME - Default */
+:root {
+	/* BRAND COLORS */
+	--pricol: #1d74ff;
+	--pricol-hover: #3f99ff;
+	--pricol-light: #60a5fa;
+	--pricol-dark: #1e40af;
+
+	/* STANDARD COLORS */
+	--bgcol: #0f172a;
+	--bgcol-subtle: #1a263d;
+	--bgcol-muted: #334155;
+	--bgcol-darken: #00000088;
+
+	--wincol: #1f2e49;
+	--wincol-light: #374f73;
+	--wincol-lighter: #4c668b;
+	--wincol-lighten: #6587b78a;
+	--wincol-darken: #0f172abd;
+
+	--borcol: #556987;
+	--borcol-strong: #9cbae5;
+
+	/* TEXT COLORS */
+	--txtcol: #f1f5f9;
+	--txtcol-subtle: #aeceff8f;
+	--txtcol-muted: #aebbcd;
+	--txtcol-link: #6db4ff;
+	--txtcol-link-hover: #a3d0ff;
+	--txtcol-highlight: #ffe249;
+
+	/* SHADOWS */
+	--winshadow: 0px 0px 20px #0008;
+	--butshadow: 0px 0px 10px #0005;
+	--inshadow: 0px 0px 10px #0005 inset;
+
+	/* RADIUS */
+	--cors: 4px;
+	--corm: 6px;
+	--corl: 10px;
+	--corf: 9999px;
+
+	/* SPACING */
+	--butspace-small: 3px 10px;
+	--calcspace: 3px;
+	--winspace: 20px;
+
+	/* TRANSITIONS */
+	--trans-fast: 100ms ease;
+	--trans: 150ms ease;
+}

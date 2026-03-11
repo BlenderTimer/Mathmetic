@@ -1,0 +1,167 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Mathmetic</title>
+		<link rel="icon" href="/assets/icon.png" type="image/x-icon">
+  </head>
+  <body style="overflow: hidden;">
+    <div id="loader" style="background: #0f172a; position: absolute; top: 0; bottom: 0; left: 0; right: 0; z-index: 9999999"></div>
+    <div id="about-window" class="window">
+      <button class="exit-window"><img src="./img/x-spaced.svg" alt="Close about"></button>
+      <div id="donate">
+        <img src="./img/heart-color-outlined.svg" alt="Heart icon">
+        <div class="info col-center"><p>This software is free, but creating and maintaining it isn't. Your support helps keep BlenderTimer products free for everyone!</p></div>
+        <div class="info col-center"><button id="donate-btn">Donate</button></div>
+      </div>
+      <div id="app-info" class="window-group">
+        <h1>Application Information</h1>
+        <div class="info col2"><p id="info-appname"><b>App Name:</b> ...</p><p id="info-version"><b>Version:</b> ...</p></div>
+        <div class="info col2"><p id="info-company"><b>Company:</b> ...</p><p id="info-author"><b>Author:</b> Daniel Roberts</p></div>
+        <div class="info col2"><p id="info-website"><b>Website:</b> <a>...</a></p><p id="info-email"><b>Email:</b> ...</p></div>
+        <div class="info col-center"><button id="update-btn">Check for updates</button></div>
+        <div class="info col-center" id="update-result"></div>
+      </div>
+      <div id="acknowledgements" class="window-group">
+        <h1>Acknowledgements</h1>
+        <div class="info"><p>This calculator is powered by <b><a href="https://github.com/MikeMcl/bignumber.js" class="external-link">bignumber.js</a></b> which supports arbitrary-precision arithmetic. Thank you <a href="https://github.com/MikeMcl" class="external-link">@MikeMcl</a> and all other <a href="https://github.com/MikeMcl/bignumber.js/graphs/contributors" class="external-link">contributors</a>!</p></div>
+        <div class="info"><p>The formula parser and some of the more complex calculations (pi, atan, etc.) are custom built. The "pi" constant is calculated using the Chudnovsky algorithm for maximum precision and accuracy (I have confirmed it to be accurate up to 1 million digits of PI).</p></div>
+      </div>
+      <div id="syntax-functions" class="window-group">
+        <h1>Syntax, Functions, and Variables</h1>
+        <div class="info"><p>Formulas are parsed using standard parsing methods. <b class="code">+</b> for addition, <b class="code">-</b> for subtraction, <b class="code">*</b> for multiplication, <b class="code">/</b> for division, <b class="code">%</b> for modulo, <b class="code">^</b> for power, and <b class="code">!</b> for factorial.</p></div>
+        <div class="info"><h1>Built-in constants:</h1></div>
+        <div class="info"><ul>
+          <li><p></p><b class="code">pi</b> PI/π <i>(~3.14159)</i></p></li>
+          <li><p></p><b class="code">e</b> Euler's number <i>(~2.71828)</i></p></li>
+          <li><p></p><b class="code">phi</b> Golden ratio/φ <i>(~1.61803)</i></p></li>
+          <li><p></p><b class="code">tau</b> Tau/τ <i>(~6.28319)</i></p></li>
+        </ul></div>
+        <div class="info"><h1>Built-in variables:</h1></div>
+        <div class="info"><ul>
+          <li><p></p><b class="code">calc1</b> the result from calculator 1</p></li>
+          <li><p></p><b class="code">calc2</b> the result from calculator 2</p></li>
+          <li><p></p><b class="code">calc3</b> the result from calculator 3</p></li>
+          <li><p></p><b class="code">calc4</b> the result from calculator 4</p></li>
+          <li><p></p><b class="code">calc5</b> the result from calculator 5</p></li>
+          <li><p></p><b class="code">calc6</b> the result from calculator 6</p></li>
+        </ul></div>
+        <div class="info"><h1>Built-in functions:</h1></div>
+        <div class="info"><ul>
+          <li><p></p><b class="code">sqrt(n)</b> returns the square root of <b>n</b></p></li>
+          <li><p></p><b class="code">pow(n, a)</b> returns the <b>n</b> to the power of <b>a</b> <i>(equivalent to n^a)</i></p></li>
+          <li><p></p><b class="code">abs(n)</b> returns the absolute value of <b>n</b></p></li>
+          <li><p></p><b class="code">log(n)</b> or <b class="code">log(n, a)</b> returns the power of <b>a</b> that equals <b>n</b> <i>(a is optional, defaults to 10)</i></p></li>
+          <li><p></p><b class="code">log2(n)</b> returns the power of <b>2</b> that equals <b>n</b></p></li>
+          <li><p></p><b class="code">log10(n)</b> returns the power of <b>10</b> that equals <b>n</b></p></li>
+          <li><p></p><b class="code">ln(n)</b> returns the power of <b>e</b> <i>(Euler's number)</i> that equals <b>n</b></p></li>
+          <li><p></p><b class="code">exp(n)</b> returns <b>e</b> <i>(Euler's number)</i> to the power of <b>n</b></p></li>
+          <li><p></p><b class="code">ceil(n)</b> returns <b>n</b> rounded up</p></li>
+          <li><p></p><b class="code">floor(n)</b> returns <b>n</b> rounded down</p></li>
+          <li><p></p><b class="code">round(n)</b> or <b class="code">round(n, a)</b> returns <b>n</b> rounded to <b>a</b> decimal places<i>(a is optional, defaults to 0)</i></p></li>
+          <li><p></p><b class="code">min(n1, n2, ...)</b> returns the smallest of the given numbers</p></li>
+          <li><p></p><b class="code">max(n1, n2, ...)</b> returns the largest of the given numbers</p></li>
+          <li><p></p><b class="code">sum(n1, n2, ...)</b> returns the sum of the given numbers</p></li>
+          <li><p></p><b class="code">mod(n, a)</b> returns the modulo of <b>n</b> by <b>a</b> <i>(equivalent to n%a)</i></p></li>
+          <li><p></p><b class="code">rad(n)</b> converts <b>n</b> degrees to radians</p></li>
+          <li><p></p><b class="code">deg(n)</b> converts <b>n</b> radians to degrees</p></li>
+          <li><p></p><b class="code">sin(n)</b> returns the sine of <b>n</b></p></li>
+          <li><p></p><b class="code">cos(n)</b> returns the cosine of <b>n</b></p></li>
+          <li><p></p><b class="code">tan(n)</b> returns the tangent of <b>n</b></p></li>
+          <li><p></p><b class="code">asin(n)</b> returns the angle whose sine is <b>n</b></p></li>
+          <li><p></p><b class="code">acos(n)</b> returns the angle whose cosine is <b>n</b></p></li>
+          <li><p></p><b class="code">atan(n)</b> returns the angle whose tangent is <b>n</b></p></li>
+          <li><p></p><b class="code">sinh(n)</b> returns the hyperbolic sine of <b>n</b></p></li>
+          <li><p></p><b class="code">cosh(n)</b> returns the hyperbolic cosine of <b>n</b></p></li>
+          <li><p></p><b class="code">tanh(n)</b> returns the hyperbolic tangent of <b>n</b></p></li>
+          <li><p></p><b class="code">d(n)</b> returns only the decimal of <b>n</b></p></li>
+          <li><p></p><b class="code">repeat(n, a)</b> repeats the calculation of <b>n</b> <b>a</b> times and returns the sum <i>(the repeat function also provides a variable "n" which is the number of repetitions at the point of calculation)</i></p></li>
+          <li><p></p><b class="code">dist(x1, y1, x2, y2)</b> returns the 2D distance between points <b>1</b> and <b>2</b></p></li>
+          <li><p></p><b class="code">dist3(x1, y1, z1, x2, y2, z2)</b> returns the 3D distance between points <b>1</b> and <b>2</b></p></li>
+        </ul></div>
+        <div class="info"><h1>Unit conversions:</h1></div>
+        <div class="info"><p>The parser supports conversion between many units of measurement including units such as kilometers, miles, joules, kilowatt-hours, etc. The syntax is very straight forward. Here are some examples:</p></div>
+        <div class="info"><ul>
+          <li><p></p><b class="code">5km to mi</b> converts 5 kilometers to miles</p></li>
+          <li><p></p><b class="code">5 kilometers to miles</b> converts 5 kilometers to miles</p></li>
+          <li><p></p><b class="code">5s to ms</b> converts 5 seconds to milliseconds</p></li>
+          <li><p></p><b class="code">(123/5) bar to psi</b> converts 24.6 bar to PSI</p></li>
+        </ul></div>
+        <div class="info"><p>If you find any bugs, or have any suggestions for this software, please <a href="https://blendertimer.com/about#contact" class="external-link">contact BlenderTimer</a>!</p></div>
+      </div>
+    </div>
+    <div id="settings-window" class="window">
+      <button class="exit-window"><img src="./img/x-spaced.svg" alt="Close settings"></button>
+      <div id="calculations-settings" class="window-group">
+        <h1>Calculations</h1>
+        <div class="setting"><p>Default trigonometry mode:</p><div class="biselector" id="trig-mode-def"><button>deg</button><button>rad</button></div></div>
+        <div class="setting"><p>Decimal precision:</p><input type="number" value="20" min="1" max="1000000" id="decimal-precision-def"></div>
+      </div>
+      <div id="formatting-settings" class="window-group">
+        <h1>Formatting</h1>
+        <div class="setting"><p>Decimal separator:</p><input type="text" value="." maxlength="1" id="dec-sep"></div>
+        <div class="setting"><p>Thousands separator:</p><input type="text" value="," maxlength="1" id="thou-sep"></div>
+      </div>
+      <div id="window-settings" class="window-group">
+        <h1>Window</h1>
+        <div class="setting"><p>On top by default:</p><div class="biselector" id="ontop-def"><button>Yes</button><button>No</button></div></div>
+      </div>
+    </div>
+    <div id="history-window" class="window">
+      <button class="exit-window"><img src="./img/x-spaced.svg" alt="Close history"></button>
+    </div>
+    <div id="menubar">
+      <div id="menubar-left">
+        <div id="trig-mode" class="biselector"><button>deg</button><button>rad</button></div>
+        <div id="error-display"></div>
+      </div>
+      <div id="menubar-right">
+        <button id="about-btn" style="--w: 24px; --p: 3px;" title="About/Help"><img src="./img/about.svg" alt="About/Help"></button>
+        <button id="settings-btn" style="--w: 24px; --p: 3px;" title="Settings"><img src="./img/settings.svg" alt="Settings"></button>
+        <button id="history-btn" style="--w: 24px; --p: 3px;" title="Calculation history"><img src="./img/history.svg" alt="History"></button>
+        <button id="ontop-btn" style="--w: auto; --p: 3px 8px;" title="Force the window to stay on top of other windows">On top</button>
+      </div>
+    </div>
+    <div id="main-ui">
+      <div id="variables">
+        <h2>VARIABLES</h2>
+        <button id="hide-variables" title="Hide variable list"><img src="./img/left.svg" alt="Left"></button>
+        <div id="variable-list"></div>
+        <button id="new-variable" class="small-button">New Variable</button>
+      </div>
+      <div id="calculators">
+        <div id="calculator1" class="calculator">
+          <input type="text" id="calc1-formula" class="formula" placeholder="formula"><b title="Calculator 1: click to copy formula key">1</b>
+          <input type="text" id="calc1-fullresult" class="fullresult" placeholder="full result" readonly><button class="copy-btn"><img src="./img/copy.svg" alt="Copy" title="Copy full result"></button>
+          <input type="text" id="calc1-result" class="result" placeholder="result" readonly><button title="Toggle thousands separator in full result" class="thousands-toggle">,</button>
+        </div>
+        <div id="calculator2" class="calculator">
+          <input type="text" id="calc2-formula" class="formula" placeholder="formula"><b title="Calculator 2: click to copy formula key">2</b>
+          <input type="text" id="calc2-fullresult" class="fullresult" placeholder="full result" readonly><button class="copy-btn"><img src="./img/copy.svg" alt="Copy" title="Copy full result"></button>
+          <input type="text" id="calc2-result" class="result" placeholder="result" readonly><button title="Toggle thousands separator in full result" class="thousands-toggle">,</button>
+        </div>
+        <div id="calculator3" class="calculator">
+          <input type="text" id="calc3-formula" class="formula" placeholder="formula"><b title="Calculator 3: click to copy formula key">3</b>
+          <input type="text" id="calc3-fullresult" class="fullresult" placeholder="full result" readonly><button class="copy-btn"><img src="./img/copy.svg" alt="Copy" title="Copy full result"></button>
+          <input type="text" id="calc3-result" class="result" placeholder="result" readonly><button title="Toggle thousands separator in full result" class="thousands-toggle">,</button>
+        </div>
+        <div id="calculator4" class="calculator">
+          <input type="text" id="calc4-formula" class="formula" placeholder="formula"><b title="Calculator 4: click to copy formula key">4</b>
+          <input type="text" id="calc4-fullresult" class="fullresult" placeholder="full result" readonly><button class="copy-btn"><img src="./img/copy.svg" alt="Copy" title="Copy full result"></button>
+          <input type="text" id="calc4-result" class="result" placeholder="result" readonly><button title="Toggle thousands separator in full result" class="thousands-toggle">,</button>
+        </div>
+        <div id="calculator5" class="calculator">
+          <input type="text" id="calc5-formula" class="formula" placeholder="formula"><b title="Calculator 5: click to copy formula key">5</b>
+          <input type="text" id="calc5-fullresult" class="fullresult" placeholder="full result" readonly><button class="copy-btn"><img src="./img/copy.svg" alt="Copy" title="Copy full result"></button>
+          <input type="text" id="calc5-result" class="result" placeholder="result" readonly><button title="Toggle thousands separator in full result" class="thousands-toggle">,</button>
+        </div>
+        <div id="calculator6" class="calculator">
+          <input type="text" id="calc6-formula" class="formula" placeholder="formula"><b title="Calculator 6: click to copy formula key">6</b>
+          <input type="text" id="calc6-fullresult" class="fullresult" placeholder="full result" readonly><button class="copy-btn"><img src="./img/copy.svg" alt="Copy" title="Copy full result"></button>
+          <input type="text" id="calc6-result" class="result" placeholder="result" readonly><button title="Toggle thousands separator in full result" class="thousands-toggle">,</button>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/renderer.js"></script>
+  </body>
+</html>
