@@ -29,6 +29,7 @@ module.exports = {
           homepage: 'https://blendertimer.com/software/mathmetic',
           icon: './assets/icon.png',
           categories: ['Utility'],
+          bin: 'Mathmetic'
         }
       },
     },
@@ -40,6 +41,7 @@ module.exports = {
           homepage: 'https://blendertimer.com/software/mathmetic',
           icon: './assets/icon.png',
           categories: ['Utility'],
+          bin: 'Mathmetic'
         }
       },
     },
