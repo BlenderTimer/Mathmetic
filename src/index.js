@@ -42,7 +42,7 @@ document.getElementById("update-btn").addEventListener('click', (e) => {
       document.getElementById("update-result").innerHTML = `<p>You're using the latest version!</p>`;
     }
     else {
-      document.getElementById("update-result").innerHTML = `<a href="https://blendertimer.com/software/mathmetic" id="update-link"><b>Update available:</b> ${currentVersion} > ${newVersion}</a>`;
+      document.getElementById("update-result").innerHTML = `<a href="https://blendertimer.com/software/mathmetic" id="update-link"><b>Update available:</b> ${currentVersion} -> ${newVersion}</a>`;
       document.getElementById("update-link").addEventListener('click', (e) => {const link = e.target.closest('a[href]');if (!link) return;e.preventDefault();window.electron.openExternal(link.href);});
     }
   });
