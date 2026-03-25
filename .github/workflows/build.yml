@@ -42,9 +42,11 @@ jobs:
       - name: Rename Linux installers
         if: matrix.os == 'ubuntu-latest'
         run: |
-          for f in out/make/*.{deb,rpm}; do
+          cd out/make
+          shopt -s nullglob
+          for f in *.deb *.rpm; do
             ext="${f##*.}"
-            mv "$f" "out/make/mathmetic-v${{ github.ref_name }}.$ext"
+            mv "$f" "mathmetic-v${{ github.ref_name }}.$ext"
           done
 
       - name: Set release mode
