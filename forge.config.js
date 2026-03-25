@@ -38,7 +38,8 @@ module.exports = {
           description: 'An ultra-powerful and precise calculation workspace!',
           categories: ['Utility'],
           icon: './assets/icon.png',
-          bin: 'Mathmetic'
+          bin: 'Mathmetic',
+          compression: 'xz'
         }
       },
     },
