@@ -4,6 +4,14 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Publish installers to GitHub Release?'
+        required: false
+        default: 'false'
 
 jobs:
   build:
@@ -13,6 +21,9 @@ jobs:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
 
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,16 +31,43 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Install dependencies
         run: npm install
 
       - name: Build installers
         run: npm run make
+      
+      - name: Rename Linux installers
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          for f in out/make/*.{deb,rpm}; do
+            ext="${f##*.}"
+            mv "$f" "out/make/mathmetic-v${{ github.ref_name }}-installer.$ext"
+          done
 
-      - name: Upload installers
+      - name: Set release mode
+        run: |
+          echo "RELEASE=false" >> $GITHUB_ENV
+          if [ "${{ github.event.inputs.release }}" == "true" ]; then
+            echo "RELEASE=true" >> $GITHUB_ENV
+          fi
+          if [ "${{ github.ref_type }}" == "tag" ]; then
+            echo "RELEASE=true" >> $GITHUB_ENV
+          fi
+
+      - name: Upload installers as artifacts
+        if: env.RELEASE != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: installers-${{ matrix.os }}
           path: out/make/**
+
+      - name: Publish installers to GitHub Release
+        if: env.RELEASE == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: out/make/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

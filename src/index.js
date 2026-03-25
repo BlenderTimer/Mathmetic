@@ -1,4 +1,5 @@
 import BigNumber from "bignumber.js";
+import xSvg from '../img/x.svg';
 
 window.addEventListener('keydown', (e) => {
   if (e.key == 'Escape') {
@@ -34,9 +35,7 @@ aboutWindow.children[0].addEventListener('click', function(e) {
 });
 document.getElementById("update-btn").addEventListener('click', (e) => {
   let newVersion = "";
-  fetch('https://blendertimer.com/software/mathmetic/version.txt')
-  .then(res => res.text())
-  .then(text => {
+  fetch('https://blendertimer.com/software/mathmetic/version.txt').then(res => res.text()).then(text => {
     newVersion = text;
     if (newVersion == currentVersion) {
       document.getElementById("update-result").innerHTML = `<p>You're using the latest version!</p>`;
@@ -45,7 +44,7 @@ document.getElementById("update-btn").addEventListener('click', (e) => {
       document.getElementById("update-result").innerHTML = `<a href="https://blendertimer.com/software/mathmetic" id="update-link"><b>Update available:</b> ${currentVersion} -> ${newVersion}</a>`;
       document.getElementById("update-link").addEventListener('click', (e) => {const link = e.target.closest('a[href]');if (!link) return;e.preventDefault();window.electron.openExternal(link.href);});
     }
-  });
+  }).catch(error => {document.getElementById("update-result").innerHTML = `<b style="color: #ff3232">Unable to check for updates. Check your internet connection.</b>`});
 });
 document.getElementById("donate-btn").addEventListener('click', (e) => {
   window.electron.openExternal('https://blendertimer.com/donate?p=Mathmetic+Donation');
@@ -312,7 +311,7 @@ function newVariable(name = '', value = '') {
     }
   })
   const img = document.createElement('img');
-  img.src = "/img/x.svg";
+  img.src = xSvg;
   img.alt = "Delete";
   img.title = "Delete variable";
   img.addEventListener('click', function(e) {
