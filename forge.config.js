@@ -22,13 +22,22 @@ module.exports = {
       platforms: ['darwin'],
     },
     {
+      name: '@electron-forge/maker-dmg',
+      config: {
+        format: 'ULFO',
+      }
+    },
+    {
       name: '@electron-forge/maker-deb',
       config: {
         options: {
+          name: 'mathmetic',
+          productName: 'Mathmetic',
           maintainer: 'BlenderTimer',
           homepage: 'https://blendertimer.com/software/mathmetic',
-          icon: './assets/icon.png',
+          description: 'An ultra-powerful and precise calculation workspace!',
           categories: ['Utility'],
+          icon: './assets/icon.png',
           bin: 'Mathmetic'
         }
       },
@@ -37,10 +46,13 @@ module.exports = {
       name: '@electron-forge/maker-rpm',
       config: {
         options: {
+          name: 'mathmetic',
+          productName: 'Mathmetic',
           maintainer: 'BlenderTimer',
           homepage: 'https://blendertimer.com/software/mathmetic',
-          icon: './assets/icon.png',
+          description: 'An ultra-powerful and precise calculation workspace!',
           categories: ['Utility'],
+          icon: './assets/icon.png',
           bin: 'Mathmetic'
         }
       },

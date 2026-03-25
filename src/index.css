@@ -9,6 +9,16 @@
   background: var(--wincol-lighten);
 }
 
+.spr {
+	width: 90%;
+	height: 2px;
+	min-height: 2px;
+	max-height: 2px;
+	background: #82b3ff24;
+	box-shadow: 0px 0px 10px #00000030;
+	margin: 10px auto 10px auto;
+}
+
 html, body {
   background: var(--bgcol);
 }

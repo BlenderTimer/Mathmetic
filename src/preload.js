@@ -56,8 +56,8 @@ function saveHistory() {
 }
 
 contextBridge.exposeInMainWorld('calchistory', {
-  add: (formula, fullresult, result, calc, precision, time, date) => {
-    calchistory.unshift({formula, fullresult, result, calc, precision, time, date});
+  add: (formula, fullresult, result, calc, precision, time, date, version) => {
+    calchistory.unshift({formula, fullresult, result, calc, precision, time, date, version});
     if (calchistory.length > 100000) {calchistory.shift()};
     saveHistory();
   },

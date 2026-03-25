@@ -341,7 +341,7 @@ calc1.children[5].addEventListener('click', function(e) {
   else {e.target.style.background = "var(--pricol)";window.settings.setCalcFormatted(1, true)}
   formulaInput(e.target.parentNode.children[0], 'calc1');
 });
-let calc1LastCalc = {formula:"", fullresult:"", result:"", calc:"calc1", precision:20, time:0, date:Date.now(), logged:true};
+let calc1LastCalc = {formula:"", fullresult:"", result:"", calc:"calc1", precision:20, time:0, date:Date.now(), version:currentVersion, logged:true};
 // ----- calc1Formula Scrolling -----
 let calc1FormulaScroll = 0;
 let calc1FormulaBlurring = false;
@@ -928,19 +928,19 @@ function formulaInput(e, calc, stack = []) {
     if (el.value.length > 0) {result = calculate(el.value, {trigMode:trigMode, decimalSep:window.settings.getFormatting('decimal'), thousandSep:window.settings.getFormatting('thousands')})}; // add settings here
     if (result.error) {
         writeError(calcElements, result.error);
-        if (calc == 'calc1') {calc1LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), logged:false}}
-        else if (calc == 'calc2') {calc2LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), logged:false}}
-        else if (calc == 'calc3') {calc3LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), logged:false}}
-        else if (calc == 'calc4') {calc4LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), logged:false}}
-        else if (calc == 'calc5') {calc5LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), logged:false}}
-        else if (calc == 'calc6') {calc6LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), logged:false}};
+        if (calc == 'calc1') {calc1LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
+        else if (calc == 'calc2') {calc2LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
+        else if (calc == 'calc3') {calc3LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
+        else if (calc == 'calc4') {calc4LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
+        else if (calc == 'calc5') {calc5LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
+        else if (calc == 'calc6') {calc6LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}};
     }
     else {
         clearError(calcElements);
         calcElements.fullresult.value = result.full;
         calcElements.result.value = result.result;
         if (result.full.length == 0) {_defaultCalc.removeVariable(calc)} else {_defaultCalc.setVariable(calc, result.result)};
-        let lc = {formula:el.value, fullresult:result.full, result:result.result, calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), logged:false};
+        let lc = {formula:el.value, fullresult:result.full, result:result.result, calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false};
         if (calc == 'calc1') {calc1LastCalc = lc}
         else if (calc == 'calc2') {calc2LastCalc = lc}
         else if (calc == 'calc3') {calc3LastCalc = lc}
@@ -1113,8 +1113,9 @@ let _ln2Cache = null;
 let _ln10Cache = null;
 let _precisionAtLastCompute = PRECISION;
 
-// Repeat function context - stores the current value of 'n' during repeat() evaluation
+// Repeat function context - stores current iteration (n) and previous value (v)
 let _repeatN = null;
+let _repeatV = null;
 
 function _getPI() {
   if (_piCache === null || _precisionAtLastCompute !== PRECISION) {
@@ -1290,8 +1291,102 @@ function _tanh(x) {
   return num.dividedBy(den);
 }
 
+// High-precision power function for non-integer exponents
+// Uses a^b = exp(b * ln(a)) for non-integers, direct computation for integers
+function _power(base, exponent) {
+  const BN = _mkBN();
+  const b = new BN(base.toString());
+  const e = new BN(exponent.toString());
+  
+  // Handle special cases
+  if (b.isZero()) {
+    if (e.isPositive()) return new BN(0);
+    throw new Error('0^0 or 0^negative is undefined');
+  }
+  if (e.isZero()) return new BN(1);
+  if (e.eq(1)) return b;
+  if (b.eq(1)) return new BN(1);
+  
+  // Check if exponent is an integer
+  if (e.isInteger()) {
+    // Use BigNumber's built-in integer power (fast and exact)
+    return b.exponentiatedBy(e);
+  }
+  
+  // For non-integer exponents: a^b = exp(b * ln(a))
+  // But this only works for positive bases
+  if (b.isNegative()) {
+    throw new Error('Non-integer power of negative number is not supported');
+  }
+  
+  // Compute b * ln(a)
+  const lnBase = _ln(b);
+  const product = e.times(lnBase);
+  
+  // Return exp(product)
+  return _exp(product);
+}
+
 function _toRad(x) { return new _mkBN()(x.toString()).times(_getPI().toString()).dividedBy(180); }
 function _toDeg(x) { return new _mkBN()(x.toString()).times(180).dividedBy(_getPI().toString()); }
+
+
+// ─── HIGH-PRECISION POWER FUNCTION ────────────────────────────────────────────
+// Computes base^exponent for any real exponent using the formula: a^b = e^(b*ln(a))
+// For integer exponents, uses fast repeated multiplication
+// For non-integer exponents, uses logarithms (accurate but slower)
+function _highPrecisionPow(base, exponent) {
+  const BN = _mkBN();
+  const b = new BN(base.toString());
+  const e = new BN(exponent.toString());
+  
+  // Handle special cases
+  if (b.isZero()) {
+    if (e.isZero()) throw new Error('0^0 is undefined');
+    if (e.isNegative()) throw new Error('0 to negative power is undefined');
+    return new BigNumber(0);
+  }
+  
+  if (e.isZero()) return new BigNumber(1);
+  if (e.equals(1)) return base;
+  
+  // For negative bases with non-integer exponents, result is complex (not supported)
+  if (b.isNegative() && !e.isInteger()) {
+    throw new Error('Negative base with non-integer exponent (complex result)');
+  }
+  
+  // For integer exponents, use fast repeated multiplication
+  if (e.isInteger()) {
+    const exp = e.toNumber();
+    if (Math.abs(exp) > 10000 && !BYPASS_LIMITS) {
+      const err = new Error('Power exponent > 10000 (safety limit)');
+      err.bypassable = true;
+      throw err;
+    }
+    
+    let result = new BN(1);
+    let absExp = Math.abs(exp);
+    let localBase = new BN(b.toString());
+    
+    while (absExp > 0) {
+      if (absExp % 2 === 1) result = result.times(localBase);
+      localBase = localBase.times(localBase);
+      absExp = Math.floor(absExp / 2);
+    }
+    
+    if (exp < 0) result = new BN(1).dividedBy(result);
+    return new BigNumber(result.toString());
+  }
+  
+  // For non-integer exponents: a^b = e^(b * ln(a))
+  // Handle negative base by computing abs(base)^exponent and handling sign
+  const absBase = b.abs();
+  const lnBase = _ln(new BigNumber(absBase.toString()));
+  const product = new BN(lnBase.toString()).times(e);
+  const result = _exp(new BigNumber(product.toString()));
+  
+  return new BigNumber(result.toString());
+}
 
 // ─── UNIT CONVERSION TABLE ────────────────────────────────────────────────────
 const UNIT_CATEGORIES = [
@@ -1724,7 +1819,7 @@ const FUNCTIONS = {
       err.bypassable = true;
       throw err;
     }
-    return a.exponentiatedBy(b);
+    return _power(a, b);
   },
   abs:   ([a])    => { if (a === undefined) throw new Error('abs() takes 1 argument'); return a.abs(); },
 
@@ -1770,21 +1865,7 @@ const FUNCTIONS = {
     return v.minus(v.integerValue(BigNumber.ROUND_FLOOR));
   },
   sum:  (args) => { if (!args.length) throw new Error('sum() needs ≥1 argument'); return args.reduce((acc, v) => acc.plus(v), new BigNumber(0)); },
-  repeat: ([x, n]) => {
-    if (x === undefined || n === undefined) throw new Error('repeat() takes 2 arguments');
-    const times = n.toNumber();
-    if (!Number.isInteger(times) || times < 0) throw new Error('repeat() count must be non-negative integer');
-    if (times > 1000 && !BYPASS_LIMITS) {
-      const err = new Error('repeat() count > 1000 (safety limit)');
-      err.bypassable = true;
-      throw err;
-    }
-    let result = x;
-    for (let i = 1; i < times; i++) {
-      result = result.plus(x);
-    }
-    return result;
-  },
+  avg:  (args) => { if (!args.length) throw new Error('avg() needs ≥1 argument'); return args.reduce((acc, v) => acc.plus(v), new BigNumber(0)).dividedBy(args.length); },
   dist: ([x1,y1,x2,y2]) => {
     if ([x1,y1,x2,y2].some(v=>v===undefined)) throw new Error('dist() takes 4 arguments');
     const dx=x2.minus(x1), dy=y2.minus(y1);
@@ -1795,6 +1876,7 @@ const FUNCTIONS = {
     const dx=x2.minus(x1), dy=y2.minus(y1), dz=z2.minus(z1);
     return dx.times(dx).plus(dy.times(dy)).plus(dz.times(dz)).sqrt();
   },
+  sound: ([a]) => { if (a === undefined) throw new Error('sound() takes 1 argument'); return _power(new BigNumber(a).plus(273.15).dividedBy(273.15), 0.5).times(331.228); },
 };
 
 // ─── PREPROCESSOR ────────────────────────────────────────────────────────────
@@ -1982,8 +2064,9 @@ function tokenize(input) {
       name = '';
       while (i < input.length && /[a-zA-Z0-9_]/.test(input[i])) name += input[i++];
       const lower2 = name.toLowerCase();
-      const builtinConsts = ['pi', 'e', 'phi', 'tau', 'n'];
-      if (lower2 in FUNCTIONS || builtinConsts.includes(lower2)) {
+      const builtinConsts = ['pi', 'e', 'phi', 'tau', 'n', 'v'];
+      const specialFunctions = ['repeat', 'repeatsum'];
+      if (lower2 in FUNCTIONS || builtinConsts.includes(lower2) || specialFunctions.includes(lower2)) {
         tokens.push({ type: TOKEN.IDENT, value: lower2 });
       }
       // Unknown identifiers silently dropped
@@ -2105,7 +2188,7 @@ function createParser(tokens, trigMode) {
         err.bypassable = true;
         throw err;
       }
-      return base.exponentiatedBy(exponent);
+      return _power(base, exponent);
     }
     return base;
   }
@@ -2127,16 +2210,16 @@ function createParser(tokens, trigMode) {
       if (peek().type === TOKEN.LPAREN) {
         consume();
         
-        // Special handling for repeat(expr, count) - must re-evaluate expr with n=1,2,3,...
-        if (name === 'repeat') {
+        // Special handling for repeatSum(expr, count) - sums expr evaluated with n=1,2,3,...
+        if (name === 'repeatsum') {
           // Store tokens for the first argument
           const exprTokens = [];
           let parenDepth = 0;
           
-          // Collect tokens until we hit the comma (at depth 0)
+          // Collect tokens until we hit the first comma (at depth 0)
           while (true) {
             const tok = peek();
-            if (tok.type === TOKEN.EOF) throw new Error('Unexpected end in repeat()');
+            if (tok.type === TOKEN.EOF) throw new Error('Unexpected end in repeatSum()');
             if (tok.type === TOKEN.COMMA && parenDepth === 0) break;
             if (tok.type === TOKEN.LPAREN) parenDepth++;
             if (tok.type === TOKEN.RPAREN) parenDepth--;
@@ -2148,9 +2231,9 @@ function createParser(tokens, trigMode) {
           expect(TOKEN.RPAREN);
           
           const count = countVal.toNumber();
-          if (!Number.isInteger(count) || count < 1) throw new Error('repeat() count must be a positive integer');
+          if (!Number.isInteger(count) || count < 1) throw new Error('repeatSum() count must be a positive integer');
           if (count > 1000 && !BYPASS_LIMITS) {
-            const err = new Error('repeat() count > 1000 (safety limit)');
+            const err = new Error('repeatSum() count > 1000 (safety limit)');
             err.bypassable = true;
             throw err;
           }
@@ -2168,6 +2251,53 @@ function createParser(tokens, trigMode) {
           _repeatN = null;
           return result;
         }
+        
+        // Special handling for repeat(expr, count, startValue) - iterative with n and v
+        if (name === 'repeat') {
+          // Store tokens for the first argument (expression)
+          const exprTokens = [];
+          let parenDepth = 0;
+          
+          // Collect tokens until we hit the first comma (at depth 0)
+          while (true) {
+            const tok = peek();
+            if (tok.type === TOKEN.EOF) throw new Error('Unexpected end in repeat()');
+            if (tok.type === TOKEN.COMMA && parenDepth === 0) break;
+            if (tok.type === TOKEN.LPAREN) parenDepth++;
+            if (tok.type === TOKEN.RPAREN) parenDepth--;
+            exprTokens.push(consume());
+          }
+          
+          expect(TOKEN.COMMA);
+          const countVal = parseExpr();
+          expect(TOKEN.COMMA);
+          const startVal = parseExpr();
+          expect(TOKEN.RPAREN);
+          
+          const count = countVal.toNumber();
+          if (!Number.isInteger(count) || count < 1) throw new Error('repeat() count must be a positive integer');
+          if (count > 1000 && !BYPASS_LIMITS) {
+            const err = new Error('repeat() count > 1000 (safety limit)');
+            err.bypassable = true;
+            throw err;
+          }
+          
+          // Iterate: evaluate expression with n (iteration) and v (previous value)
+          _repeatV = startVal;
+          for (let i = 1; i <= count; i++) {
+            _repeatN = new BigNumber(i);
+            // Create a new parser with the stored tokens
+            const subTokens = [...exprTokens, { type: TOKEN.EOF }];
+            const subParser = createParser(subTokens, trigMode);
+            const iterResult = subParser.parseExpr();
+            _repeatV = iterResult;
+          }
+          const result = _repeatV;
+          _repeatN = null;
+          _repeatV = null;
+          return result;
+        }
+
         
         const args = [];
         if (peek().type !== TOKEN.RPAREN) {
@@ -2189,10 +2319,14 @@ function createParser(tokens, trigMode) {
       }
       if (name === 'tau') return new BigNumber(_getPI().toString()).times(2);
       
-      // Repeat function context variable
+      // Repeat function context variables
       if (name === 'n') {
         if (_repeatN === null) throw new Error('"n" is only available inside repeat()');
         return _repeatN;
+      }
+      if (name === 'v') {
+        if (_repeatV === null) throw new Error('"v" is only available inside repeat()');
+        return _repeatV;
       }
       
       throw new Error(`Unknown identifier: ${name}`);
@@ -2221,7 +2355,7 @@ function createCalculator() {
     const key = name.toLowerCase().trim();
     if (!key) return {text:'Variable name cannot be empty',button:'none'};
     if (key in FUNCTIONS) return {text:`"${key}" is a reserved function name`,button:'none'};
-    const builtinConsts = ['pi', 'e', 'phi', 'tau', 'n'];
+    const builtinConsts = ['pi', 'e', 'phi', 'tau', 'n', 'v'];
     if (builtinConsts.includes(key)) return {text:`"${key}" is a reserved constant`,button:'none'};
     if (!/^[a-z_][a-z0-9_]*$/.test(key)) return {text:`Invalid variable name: "${key}"`,button:'none'};
     // Value can be a number, BigNumber, or any expression string (e.g. "pi/5", "2^10+1")
@@ -2360,29 +2494,29 @@ setTimeout(function() {document.getElementById('loader').remove();calc1Formula.f
 
 setInterval(() => {
   const t = Date.now();
-  const lastH = window.calchistory.get(0) || {formula:"", fullresult:"", result:"", calc:"calc1", precision:PRECISION, time:0, date:Date.now()};
+  const lastH = window.calchistory.get(0) || {formula:"", fullresult:"", result:"", calc:"calc1", precision:PRECISION, time:0, date:Date.now(), version:currentVersion};
   if ((t-calc1LastCalc.date) >= 3000 && calc1LastCalc.logged == false && !(calc1LastCalc.result == "ERROR") && calc1LastCalc.formula.length > 0 && calc1LastCalc.fullresult.length > 0 && !(calc1LastCalc.formula == lastH.formula && calc1LastCalc.fullresult == lastH.fullresult)) {
-    window.calchistory.add(calc1LastCalc.formula, calc1LastCalc.fullresult, calc1LastCalc.result, calc1LastCalc.calc, calc1LastCalc.precision, calc1LastCalc.time, calc1LastCalc.date);
+    window.calchistory.add(calc1LastCalc.formula, calc1LastCalc.fullresult, calc1LastCalc.result, calc1LastCalc.calc, calc1LastCalc.precision, calc1LastCalc.time, calc1LastCalc.date, calc1LastCalc.version);
     calc1LastCalc.logged = true;
   }
   if ((t-calc2LastCalc.date) >= 3000 && calc2LastCalc.logged == false && !(calc2LastCalc.result == "ERROR") && calc2LastCalc.formula.length > 0 && calc2LastCalc.fullresult.length > 0 && !(calc2LastCalc.formula == lastH.formula && calc2LastCalc.fullresult == lastH.fullresult)) {
-    window.calchistory.add(calc2LastCalc.formula, calc2LastCalc.fullresult, calc2LastCalc.result, calc2LastCalc.calc, calc2LastCalc.precision, calc2LastCalc.time, calc2LastCalc.date);
+    window.calchistory.add(calc2LastCalc.formula, calc2LastCalc.fullresult, calc2LastCalc.result, calc2LastCalc.calc, calc2LastCalc.precision, calc2LastCalc.time, calc2LastCalc.date, calc2LastCalc.version);
     calc2LastCalc.logged = true;
   }
   if ((t-calc3LastCalc.date) >= 3000 && calc3LastCalc.logged == false && !(calc3LastCalc.result == "ERROR") && calc3LastCalc.formula.length > 0 && calc3LastCalc.fullresult.length > 0 && !(calc3LastCalc.formula == lastH.formula && calc3LastCalc.fullresult == lastH.fullresult)) {
-    window.calchistory.add(calc3LastCalc.formula, calc3LastCalc.fullresult, calc3LastCalc.result, calc3LastCalc.calc, calc3LastCalc.precision, calc3LastCalc.time, calc3LastCalc.date);
+    window.calchistory.add(calc3LastCalc.formula, calc3LastCalc.fullresult, calc3LastCalc.result, calc3LastCalc.calc, calc3LastCalc.precision, calc3LastCalc.time, calc3LastCalc.date, calc3LastCalc.version);
     calc3LastCalc.logged = true;
   }
   if ((t-calc4LastCalc.date) >= 3000 && calc4LastCalc.logged == false && !(calc4LastCalc.result == "ERROR") && calc4LastCalc.formula.length > 0 && calc4LastCalc.fullresult.length > 0 && !(calc4LastCalc.formula == lastH.formula && calc4LastCalc.fullresult == lastH.fullresult)) {
-    window.calchistory.add(calc4LastCalc.formula, calc4LastCalc.fullresult, calc4LastCalc.result, calc4LastCalc.calc, calc4LastCalc.precision, calc4LastCalc.time, calc4LastCalc.date);
+    window.calchistory.add(calc4LastCalc.formula, calc4LastCalc.fullresult, calc4LastCalc.result, calc4LastCalc.calc, calc4LastCalc.precision, calc4LastCalc.time, calc4LastCalc.date, calc4LastCalc.version);
     calc4LastCalc.logged = true;
   }
   if ((t-calc5LastCalc.date) >= 3000 && calc5LastCalc.logged == false && !(calc5LastCalc.result == "ERROR") && calc5LastCalc.formula.length > 0 && calc5LastCalc.fullresult.length > 0 && !(calc5LastCalc.formula == lastH.formula && calc5LastCalc.fullresult == lastH.fullresult)) {
-    window.calchistory.add(calc5LastCalc.formula, calc5LastCalc.fullresult, calc5LastCalc.result, calc5LastCalc.calc, calc5LastCalc.precision, calc5LastCalc.time, calc5LastCalc.date);
+    window.calchistory.add(calc5LastCalc.formula, calc5LastCalc.fullresult, calc5LastCalc.result, calc5LastCalc.calc, calc5LastCalc.precision, calc5LastCalc.time, calc5LastCalc.date, calc5LastCalc.version);
     calc5LastCalc.logged = true;
   }
   if ((t-calc6LastCalc.date) >= 3000 && calc6LastCalc.logged == false && !(calc6LastCalc.result == "ERROR") && calc6LastCalc.formula.length > 0 && calc6LastCalc.fullresult.length > 0 && !(calc6LastCalc.formula == lastH.formula && calc6LastCalc.fullresult == lastH.fullresult)) {
-    window.calchistory.add(calc6LastCalc.formula, calc6LastCalc.fullresult, calc6LastCalc.result, calc6LastCalc.calc, calc6LastCalc.precision, calc6LastCalc.time, calc6LastCalc.date);
+    window.calchistory.add(calc6LastCalc.formula, calc6LastCalc.fullresult, calc6LastCalc.result, calc6LastCalc.calc, calc6LastCalc.precision, calc6LastCalc.time, calc6LastCalc.date, calc6LastCalc.version);
     calc6LastCalc.logged = true;
   }
 }, 500);
