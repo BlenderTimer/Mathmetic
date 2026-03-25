@@ -44,7 +44,7 @@ jobs:
         run: |
           for f in out/make/*.{deb,rpm}; do
             ext="${f##*.}"
-            mv "$f" "out/make/mathmetic-v${{ github.ref_name }}-installer.$ext"
+            mv "$f" "out/make/mathmetic-v${{ github.ref_name }}.$ext"
           done
 
       - name: Set release mode

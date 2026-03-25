@@ -1,6 +1,5 @@
 const { FusesPlugin } = require('@electron-forge/plugin-fuses');
 const { FuseV1Options, FuseVersion } = require('@electron/fuses');
-const { version } = require('./package.json').version;
 
 module.exports = {
   packagerConfig: {
@@ -15,7 +14,7 @@ module.exports = {
       config: {
         setupIcon: './assets/icon.ico',
         iconUrl: 'https://blendertimer.com/software/mathmetic/icon.ico',
-        setupExe: `mathmetic-${version}-installer.exe`
+        setupExe: `mathmetic-${require('./package.json').version}.exe`
       },
     },
     {
@@ -23,14 +22,14 @@ module.exports = {
       platforms: ['darwin'],
       config: {
         format: 'zip',
-        name: `mathmetic-${version}-installer`
+        name: `mathmetic-${require('./package.json').version}`
       }
     },
     {
       name: '@electron-forge/maker-dmg',
       config: {
         format: 'ULFO',
-        name: `mathmetic-${version}-installer`
+        name: `mathmetic-${require('./package.json').version}`
       }
     },
     {
