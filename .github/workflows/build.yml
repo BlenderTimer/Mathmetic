@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       release:
@@ -38,28 +36,41 @@ jobs:
 
       - name: Build installers
         run: npm run make
+
+      - name: Set VERSION
+        id: set-version
+        run: echo "VERSION=$(node -p \"require('./package.json').version\")" >> $GITHUB_ENV
       
       - name: Rename Windows installer
         if: matrix.os == 'windows-latest'
         run: |
-          mv out/make/squirrel.windows/x64/*.exe out/make/mathmetic-${{ github.ref_name }}.exe
+          mv out/make/squirrel.windows/x64/*.exe out/make/mathmetic-v${{ env.VERSION }}.exe
 
       - name: Rename macOS installer
         if: matrix.os == 'macos-latest'
         run: |
-          mv out/make/*.dmg out/make/mathmetic-${{ github.ref_name }}.dmg
+          mv out/make/*.dmg out/make/mathmetic-v${{ env.VERSION }}.dmg
 
       - name: Rename Linux installers
         if: matrix.os == 'ubuntu-latest'
         run: |
           shopt -s nullglob
           for f in out/make/deb/x64/*.deb; do
-            mv "$f" "out/make/mathmetic-${{ github.ref_name }}.deb"
+            mv "$f" "out/make/mathmetic-v${{ env.VERSION }}.deb"
+          done
+          for f in out/make/rpm/x64/*.rpm; do
+            mv "$f" "out/make/mathmetic-v${{ env.VERSION }}.rpm"
           done
 
-          for f in out/make/rpm/x64/*.rpm; do
-            mv "$f" "out/make/mathmetic-${{ github.ref_name }}.rpm"
-          done
+      - name: Upload installers as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mathmetic-installers
+          path: |
+            out/make/*.exe
+            out/make/*.dmg
+            out/make/*.deb
+            out/make/*.rpm
 
       - name: Set release mode
         shell: bash
@@ -68,16 +79,26 @@ jobs:
           if [ "${{ github.event.inputs.release }}" == "true" ]; then
             echo "RELEASE=true" >> $GITHUB_ENV
           fi
-          if [ "${{ github.ref_type }}" == "tag" ]; then
-            echo "RELEASE=true" >> $GITHUB_ENV
+
+      - name: Create Git tag for release
+        if: env.RELEASE == 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git rev-parse "v${{ env.VERSION }}" >/dev/null 2>&1; then
+            echo "Tag v${{ env.VERSION }} already exists"
+          else
+            git tag -a "v${{ env.VERSION }}" -m "Release v${{ env.VERSION }}"
+            git push origin "v${{ env.VERSION }}"
           fi
 
       - name: Create GitHub release
         if: env.RELEASE == 'true'
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref_name }}
-          name: Mathmetic v${{ github.ref_name }}
+          tag_name: v${{ env.VERSION }}
+          name: Mathmetic v${{ env.VERSION }}
           draft: false
           prerelease: false
         env:
