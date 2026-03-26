@@ -17,14 +17,14 @@ module.exports = {
         setupExe: `mathmetic-${require('./package.json').version}.exe`
       },
     },
-    {
-      name: '@electron-forge/maker-zip',
-      platforms: ['darwin'],
-      config: {
-        format: 'zip',
-        name: `mathmetic-${require('./package.json').version}`
-      }
-    },
+    // {
+    //   name: '@electron-forge/maker-zip',
+    //   platforms: ['darwin'],
+    //   config: {
+    //     format: 'zip',
+    //     name: `mathmetic-${require('./package.json').version}`
+    //   }
+    // },
     {
       name: '@electron-forge/maker-dmg',
       config: {

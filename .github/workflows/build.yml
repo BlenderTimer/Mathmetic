@@ -39,17 +39,30 @@ jobs:
       - name: Build installers
         run: npm run make
       
+      - name: Rename Windows installer
+        if: matrix.os == 'windows-latest'
+        run: |
+          mv out/make/squirrel.windows/x64/*.exe out/make/mathmetic-${{ github.ref_name }}.exe
+
+      - name: Rename macOS installer
+        if: matrix.os == 'macos-latest'
+        run: |
+          mv out/make/*.dmg out/make/mathmetic-${{ github.ref_name }}.dmg
+
       - name: Rename Linux installers
         if: matrix.os == 'ubuntu-latest'
         run: |
-          cd out/make
           shopt -s nullglob
-          for f in *.deb *.rpm; do
-            ext="${f##*.}"
-            mv "$f" "mathmetic-v${{ github.ref_name }}.$ext"
+          for f in out/make/deb/x64/*.deb; do
+            mv "$f" "out/make/mathmetic-${{ github.ref_name }}.deb"
+          done
+
+          for f in out/make/rpm/x64/*.rpm; do
+            mv "$f" "out/make/mathmetic-${{ github.ref_name }}.rpm"
           done
 
       - name: Set release mode
+        shell: bash
         run: |
           echo "RELEASE=false" >> $GITHUB_ENV
           if [ "${{ github.event.inputs.release }}" == "true" ]; then
@@ -59,17 +72,25 @@ jobs:
             echo "RELEASE=true" >> $GITHUB_ENV
           fi
 
-      - name: Upload installers as artifacts
-        if: env.RELEASE != 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: installers-${{ matrix.os }}
-          path: out/make/**
-
-      - name: Publish installers to GitHub Release
+      - name: Create GitHub release
         if: env.RELEASE == 'true'
         uses: softprops/action-gh-release@v1
         with:
-          files: out/make/**
+          tag_name: ${{ github.ref_name }}
+          name: Mathmetic v${{ github.ref_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload release assets
+        if: env.RELEASE == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            out/make/*.exe
+            out/make/*.dmg
+            out/make/*.deb
+            out/make/*.rpm
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
