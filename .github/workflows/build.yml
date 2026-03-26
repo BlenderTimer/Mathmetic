@@ -71,8 +71,8 @@ jobs:
             out/make/*.deb
             out/make/*.rpm
 
-      - name: Create Git tag for release
-        if: github.event.inputs.release == 'true'  # ← check input directly, no need for RELEASE env var
+      - name: Create Git tag for Release
+        if: github.event.inputs.release == 'true'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -85,7 +85,7 @@ jobs:
             git push origin "v$VERSION"
           fi
 
-      - name: Create GitHub release and upload assets
+      - name: Create GitHub Release and upload assets
         if: github.event.inputs.release == 'true'
         uses: softprops/action-gh-release@v2
         with:
