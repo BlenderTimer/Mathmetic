@@ -50,6 +50,15 @@ document.getElementById("donate-btn").addEventListener('click', (e) => {
   window.electron.openExternal('https://blendertimer.com/donate?p=Mathmetic+Donation');
 });
 
+for (const li of document.getElementsByTagName('li')) {
+  li.addEventListener('click', (e) => {
+    if (e.currentTarget.style.textWrapMode == 'wrap') {e.currentTarget.removeAttribute('style')}
+    else {
+      e.currentTarget.style.textWrapMode = "wrap";
+    }
+  });
+}
+
 // ========== SETTINGS WINDOW ================================================================================
 
 const settingsWindow = document.getElementById('settings-window');
@@ -79,7 +88,7 @@ decPrecisionContDef.addEventListener('input', function(e) {
   if (decPrecisionContDef.value.toString().length > 0 && decPrecisionContDef.value >= 0) {
     window.settings.setPrecision(parseInt(decPrecisionContDef.value));
     window.settings.saveSettings();
-    PRECISION = window.settings.getPrecision();
+    setPrecision(window.settings.getPrecision());
   }
 });
 
@@ -927,19 +936,19 @@ function formulaInput(e, calc, stack = []) {
     if (el.value.length > 0) {result = calculate(el.value, {trigMode:trigMode, decimalSep:window.settings.getFormatting('decimal'), thousandSep:window.settings.getFormatting('thousands')})}; // add settings here
     if (result.error) {
         writeError(calcElements, result.error);
-        if (calc == 'calc1') {calc1LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
-        else if (calc == 'calc2') {calc2LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
-        else if (calc == 'calc3') {calc3LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
-        else if (calc == 'calc4') {calc4LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
-        else if (calc == 'calc5') {calc5LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
-        else if (calc == 'calc6') {calc6LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}};
+        if (calc == 'calc1') {calc1LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
+        else if (calc == 'calc2') {calc2LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
+        else if (calc == 'calc3') {calc3LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
+        else if (calc == 'calc4') {calc4LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
+        else if (calc == 'calc5') {calc5LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
+        else if (calc == 'calc6') {calc6LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}};
     }
     else {
         clearError(calcElements);
         calcElements.fullresult.value = result.full;
         calcElements.result.value = result.result;
         if (result.full.length == 0) {_defaultCalc.removeVariable(calc)} else {_defaultCalc.setVariable(calc, result.result)};
-        let lc = {formula:el.value, fullresult:result.full, result:result.result, calc:calc, precision:PRECISION, time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false};
+        let lc = {formula:el.value, fullresult:result.full, result:result.result, calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false};
         if (calc == 'calc1') {calc1LastCalc = lc}
         else if (calc == 'calc2') {calc2LastCalc = lc}
         else if (calc == 'calc3') {calc3LastCalc = lc}
@@ -1875,7 +1884,86 @@ const FUNCTIONS = {
     const dx=x2.minus(x1), dy=y2.minus(y1), dz=z2.minus(z1);
     return dx.times(dx).plus(dy.times(dy)).plus(dz.times(dz)).sqrt();
   },
-  sound: ([a]) => { if (a === undefined) throw new Error('sound() takes 1 argument'); return _power(new BigNumber(a).plus(273.15).dividedBy(273.15), 0.5).times(331.228); },
+  sound: (args) => {
+    // 1 argument: sound(temperature_C) - simplified formula
+    // 3 arguments: sound(temperature_C, pressure_kPa, relative_humidity_percent) - Cramer equation (1993)
+    
+    if (args.length === 1) return _power(new BigNumber(args[0]).plus(273.15).dividedBy(273.15), 0.5).times(331.228);
+    
+    if (args.length === 3) {
+      // Cramer equation (1993) - NIST standard for speed of sound in humid air
+      // Reference: O. Cramer, "The variation of the specific heat ratio and the speed of sound in air 
+      // with temperature, pressure, humidity, and CO2 concentration", J. Acoust. Soc. Am. 93, 2510 (1993)
+      
+      const T_C = new BigNumber(args[0]);  // Temperature in Celsius
+      const P_kPa = new BigNumber(args[1]); // Pressure in kPa
+      const RH = new BigNumber(args[2]);    // Relative humidity (0-100%)
+      
+      // Validate inputs
+      if (RH.lt(0) || RH.gt(100)) {
+        throw new Error('Relative humidity must be between 0 and 100');
+      }
+      if (P_kPa.lte(0)) {
+        throw new Error('Pressure must be positive');
+      }
+      
+      // Calculate saturation vapor pressure (enhanced Arden Buck equation)
+      // e_sat = 0.61121 * exp((18.678 - T/234.5) * T / (257.14 + T))
+      const T_factor1 = new BigNumber('18.678').minus(T_C.dividedBy('234.5'));
+      const T_factor2 = T_C.dividedBy(T_C.plus('257.14'));
+      const exp_arg = T_factor1.times(T_factor2);
+      const e_sat = new BigNumber('0.61121').times(_exp(exp_arg));
+      
+      // Actual vapor pressure
+      const e = e_sat.times(RH).dividedBy(100);
+      
+      // Calculate enhancement factor f (accounts for non-ideal gas behavior)
+      const alpha = new BigNumber('1.00062');
+      const beta = new BigNumber('3.14e-8').times(P_kPa.times(1000)); // Convert kPa to Pa
+      const gamma = new BigNumber('5.6e-7').times(T_C.pow(2));
+      const f = alpha.plus(beta).plus(gamma);
+      
+      // Recalculate mole fraction with enhancement factor
+      const x_w_enhanced = f.times(e).dividedBy(P_kPa);
+      
+      // Speed of sound using Cramer's equation
+      // c = 331.5024 + 0.603055*T_C - 0.000528*T_C^2 + (0.1495874*T_C + 51.471935 - 0.000782*T_C^2) * x_w
+      //     - (1.82e-7 + 3.73e-8*T_C - 2.93e-10*T_C^2) * P_Pa + (-85.20931 - 0.228525*T_C + 5.91e-5*T_C^2) * x_w^2
+      //     - (2.835149 - 2.15e-13*P_Pa^2 + 29.179762*x_w + 0.000486*x_w^2)
+      
+      const T_C_sq = T_C.pow(2);
+      const P_Pa = P_kPa.times(1000); // Convert to Pascals
+      const P_Pa_sq = P_Pa.pow(2);
+      const x_w_sq = x_w_enhanced.pow(2);
+      
+      // Term 1: Base temperature dependence
+      const term1 = new BigNumber('331.5024')
+        .plus(new BigNumber('0.603055').times(T_C))
+        .minus(new BigNumber('0.000528').times(T_C_sq));
+      
+      // Term 2: Humidity effect (first order)
+      const term2_coeff = new BigNumber('0.1495874').times(T_C)
+        .plus('51.471935')
+        .minus(new BigNumber('0.000782').times(T_C_sq));
+      const term2 = term2_coeff.times(x_w_enhanced);
+      
+      // Term 3: Pressure effect
+      const term3_coeff = new BigNumber('1.82e-7')
+        .plus(new BigNumber('3.73e-8').times(T_C))
+        .minus(new BigNumber('2.93e-10').times(T_C_sq));
+      const term3 = term3_coeff.times(P_Pa);
+      
+      // Term 4: Humidity effect (second order)
+      const term4_coeff = new BigNumber('-85.20931')
+        .minus(new BigNumber('0.228525').times(T_C))
+        .plus(new BigNumber('5.91e-5').times(T_C_sq));
+      const term4 = term4_coeff.times(x_w_sq);
+      
+      return term1.plus(term2).minus(term3).plus(term4);
+    }
+    
+    throw new Error('sound() takes 1 or 3 arguments');
+  },
 };
 
 // ─── PREPROCESSOR ────────────────────────────────────────────────────────────
@@ -1961,21 +2049,57 @@ function preprocess(input, decimalSep, thousandSep, variables) {
 }
 
 // Normalise number-separator tokens in a string, tracking parenthesis depth.
-// Only processes digit-led runs at depth 0 (outside all parentheses).
-// This is safe for both the formula and for variable value strings.
+// Process digit-led runs at all depths, but skip commas when inside function calls.
+// A function call is detected as: identifier followed by '('
 function _depthAwareNormalise(str, decimalSep, thousandSep) {
-  let result = '', depth = 0, i = 0;
+  let result = '', i = 0;
+  const inFunctionCall = []; // Stack tracking whether each depth level is a function call
+  
   while (i < str.length) {
     const ch = str[i];
-    if (ch === '(') { depth++; result += ch; i++; continue; }
-    if (ch === ')') { depth--; result += ch; i++; continue; }
-    if (depth === 0 && /[0-9]/.test(ch)) {
-      let tok = '';
-      while (i < str.length && /[0-9,.]/.test(str[i])) tok += str[i++];
-      result += _processNumToken(tok, decimalSep, thousandSep);
+    
+    // Check if this '(' is part of a function call
+    if (ch === '(') {
+      // Look back to see if there's an identifier immediately before
+      let j = result.length - 1;
+      while (j >= 0 && /\s/.test(result[j])) j--; // Skip whitespace
+      let hasIdentifier = false;
+      if (j >= 0 && /[a-zA-Z0-9_]/.test(result[j])) {
+        // There's an identifier-like character, this is likely a function call
+        hasIdentifier = true;
+      }
+      inFunctionCall.push(hasIdentifier);
+      result += ch;
+      i++;
       continue;
     }
-    result += ch; i++;
+    
+    if (ch === ')') {
+      inFunctionCall.pop();
+      result += ch;
+      i++;
+      continue;
+    }
+    
+    // Process numbers - but skip comma processing if we're inside a function call
+    if (/[0-9]/.test(ch)) {
+      let tok = '';
+      while (i < str.length && /[0-9,.]/.test(str[i])) tok += str[i++];
+      
+      // If we're inside a function call, don't process commas as thousand separators
+      const isInFunctionCall = inFunctionCall.length > 0 && inFunctionCall[inFunctionCall.length - 1];
+      if (isInFunctionCall && tok.includes(',')) {
+        // Inside function call - preserve commas, only process the decimal separator
+        result += tok;
+      } else {
+        // Normal context - process thousand/decimal separators
+        result += _processNumToken(tok, decimalSep, thousandSep);
+      }
+      continue;
+    }
+    
+    result += ch;
+    i++;
   }
   return result;
 }

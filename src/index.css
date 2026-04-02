@@ -281,7 +281,24 @@ h2 {
 }
 
 .info ul li {
-  margin: 5px 0px;
+  margin: 0px;
+  padding: 4px 5px 5px 5px;
+  box-sizing: border-box;
+  border-radius: var(--cors);
+  width: calc(100vw - (var(--winspace) * 3));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-wrap-mode: nowrap;
+  cursor: pointer;
+}
+
+.info ul li:hover {
+  background: var(--wincol-light);
+}
+
+.info ul li p {
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .code {
