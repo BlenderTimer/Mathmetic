@@ -66,6 +66,22 @@ settingsWindow.children[0].addEventListener('click', function(e) {
   settingsWindow.removeAttribute('style');
 });
 
+const calcSysCont = document.getElementById('calc-sys');
+calcSysCont.children[0].addEventListener('click', function(e) {
+  e.target.style.background = "var(--pricol)";
+  calcSysCont.children[1].removeAttribute('style');
+  window.settings.setCalcSys('decimal');
+  window.settings.saveSettings();
+});
+calcSysCont.children[1].addEventListener('click', function(e) {
+  e.target.style.background = "var(--pricol)";
+  calcSysCont.children[0].removeAttribute('style');
+  window.settings.setCalcSys('integer');
+  window.settings.saveSettings();
+});
+if (window.settings.getCalcSys() == 'decimal') {calcSysCont.children[0].style.background = "var(--pricol)"}
+else {calcSysCont.children[1].style.background = "var(--pricol)"};
+
 const trigModeContDef = document.getElementById('trig-mode-def');
 trigModeContDef.children[0].addEventListener('click', function(e) {
   e.target.style.background = "var(--pricol)";
@@ -130,44 +146,171 @@ else {ontopContDef.children[1].style.background = "var(--pricol)"};
 
 let historyLoadedTo = 0;
 let historyHeight = 0;
+let historySort = 'latest';
 
 const historyWindow = document.getElementById('history-window');
-historyWindow.children[0].addEventListener('click', function(e) {
+const historyList = document.getElementById('history-list');
+historyWindow.children[0].children[0].addEventListener('click', function(e) {
   historyWindow.removeAttribute('style');
-  while (historyWindow.children.length > 1) {historyWindow.lastChild.remove()};
+  while (historyList.children.length > 0) {historyList.lastChild.remove()};
   historyLoadedTo = 0;
   historyHeight = 0;
 });
+
+historyWindow.children[0].children[1].addEventListener('click', function(e) {
+  refreshHistory();
+});
+
+// Pruning
+historyWindow.children[0].children[3].addEventListener('click', function(e) {pruneControls.style.display = 'flex';});
+const pruneControls = document.getElementById('prune-controls');
+
+const pruneAgeToggle = document.getElementById('prune-age-toggle');
+const pruneAge = document.getElementById('prune-age');
+pruneAgeToggle.children[0].addEventListener('click', function(e) {
+  e.target.style.background = "var(--pricol)";
+  pruneAgeToggle.children[1].removeAttribute('style');
+  // 
+});
+pruneAgeToggle.children[1].addEventListener('click', function(e) {
+  e.target.style.background = "var(--pricol)";
+  pruneAgeToggle.children[0].removeAttribute('style');
+  // 
+});
+pruneAgeToggle.children[1].style.background = "var(--pricol)";
+
+const pruneLengthToggle = document.getElementById('prune-length-toggle');
+const pruneLength = document.getElementById('prune-length');
+pruneLengthToggle.children[0].addEventListener('click', function(e) {
+  e.target.style.background = "var(--pricol)";
+  pruneLengthToggle.children[1].removeAttribute('style');
+  // 
+});
+pruneLengthToggle.children[1].addEventListener('click', function(e) {
+  e.target.style.background = "var(--pricol)";
+  pruneLengthToggle.children[0].removeAttribute('style');
+  // 
+});
+pruneLengthToggle.children[1].style.background = "var(--pricol)";
+
+const pruneButton = document.getElementById('prune-button');
+pruneButton.addEventListener('click', () => {pruneHistory()});
+function pruneHistory() {
+  const ageEnabled = (pruneAgeToggle.children[1].style.background && pruneAgeToggle.children[1].style.background.length > 0) ? true : false;
+  const lengthEnabled = (pruneLengthToggle.children[1].style.background && pruneLengthToggle.children[1].style.background.length > 0) ? true : false;
+  window.calchistory.prune({enabled:ageEnabled, value:parseInt(pruneAge.value)}, {enabled:lengthEnabled, value:parseInt(pruneLength.value)});
+  pruneControls.removeAttribute('style');
+  refreshHistory();
+}
+
+
 function loadHistoryUI() {
-  const hl = window.calchistory.getHistory().length;
-  while (historyLoadedTo < hl && historyHeight < ((window.innerHeight * 3) + historyWindow.scrollTop)) {
-    const h = window.calchistory.get(historyLoadedTo);
+  const hist = window.calchistory.getHistory();
+  const hl = hist.length;
+  for (let i=0; i < hist.length; i++) {hist[i].id = hl-i};
+  if (historySort == 'oldest') {hist.sort((a, b) => a.date - b.date)}
+  else if (historySort == 'fastest') {hist.sort((a, b) => a.time - b.time)}
+  else if (historySort == 'slowest') {hist.sort((a, b) => b.time - a.time)}
+  while (historyLoadedTo < hl && historyHeight < ((window.innerHeight * 3) + historyList.scrollTop)) {
+    const h = hist[historyLoadedTo];
     const el = document.createElement('div');
     el.className = 'history-entry';
-    el.innerHTML = `
+    if (h.sys == 'integer') {
+      el.innerHTML = `
+<div class="history-entry-general">
+  <b>${h.calc}</b>
+  <div class="heg-spr"></div>
+  <p>Precision: INTEGER</p>
+  <div class="heg-spr"></div>
+  <p title="${timeString(h.time)}">Calculation time: ${h.time}ms</p>
+  <div class="heg-spr"></div>
+  <i>ID: ${h.id}</i>
+  <div class="heg-spr"></div>
+  <i title="${new Date(h.date).toString()}">${new Date(h.date).toISOString().split('T')[0]}</i>
+</div>
+<input type="text" class="history-entry-formula" value="${h.formula}" readonly>
+<input type="text" class="history-entry-result" value="${h.fullresult}" readonly>
+<input type="text" class="history-entry-result" value="${h.result}" readonly>`; 
+    }
+    else {
+      el.innerHTML = `
 <div class="history-entry-general">
   <b>${h.calc}</b>
   <div class="heg-spr"></div>
   <p>Precision: ${h.precision}</p>
   <div class="heg-spr"></div>
-  <p>Calculation time: ${h.time}ms</p>
+  <p title="${timeString(h.time)}">Calculation time: ${h.time}ms</p>
   <div class="heg-spr"></div>
-  <i>ID: ${hl-historyLoadedTo}</i>
+  <i>ID: ${h.id}</i>
   <div class="heg-spr"></div>
   <i title="${new Date(h.date).toString()}">${new Date(h.date).toISOString().split('T')[0]}</i>
 </div>
 <input type="text" class="history-entry-formula" value="${h.formula}" readonly>
 <input type="text" class="history-entry-result" value="${h.fullresult}" readonly>
 <input type="text" class="history-entry-result" value="${h.result}" readonly>`;
+    }
     el.style.height = "105px";
-    historyWindow.appendChild(el);
+    historyList.appendChild(el);
     historyHeight += 105 + 5; // height + margin
     historyLoadedTo++;
   }
 }
-historyWindow.addEventListener('scroll', (e) => {loadHistoryUI()});
+historyList.addEventListener('scroll', (e) => {loadHistoryUI()});
 
-loadHistoryUI();
+function timeString(ms) {
+  let total = Math.round(ms * 1e4) / 1e4;
+  const h = String(Math.floor(total / 3600000)).padStart(2, '0');
+  const m = String(Math.floor(total / 60000) % 60).padStart(2, '0');
+  total %= 60000;
+  const s = Math.floor(total / 1000);
+  const sec = (total / 1000).toFixed(4).padStart(7, '0'); // ss.mmmm
+  return `${h}:${m}:${sec}`;
+};
+
+function refreshHistory() {
+  while (historyList.children.length > 0) {historyList.lastChild.remove()};
+  historyLoadedTo = 0;
+  historyHeight = 0;
+  loadHistoryUI();
+}
+
+const historySortCont = document.getElementById('history-sort');
+historySortCont.children[0].addEventListener('click', function(e) {
+  e.target.style.background = "var(--pricol)";
+  historySortCont.children[1].removeAttribute('style');
+  historySortCont.children[2].removeAttribute('style');
+  historySortCont.children[3].removeAttribute('style');
+  historySort = e.target.textContent.toLowerCase();
+  refreshHistory();
+});
+historySortCont.children[1].addEventListener('click', function(e) {
+  e.target.style.background = "var(--pricol)";
+  historySortCont.children[0].removeAttribute('style');
+  historySortCont.children[2].removeAttribute('style');
+  historySortCont.children[3].removeAttribute('style');
+  historySort = e.target.textContent.toLowerCase();
+  refreshHistory();
+});
+historySortCont.children[2].addEventListener('click', function(e) {
+  e.target.style.background = "var(--pricol)";
+  historySortCont.children[0].removeAttribute('style');
+  historySortCont.children[1].removeAttribute('style');
+  historySortCont.children[3].removeAttribute('style');
+  historySort = e.target.textContent.toLowerCase();
+  refreshHistory();
+});
+historySortCont.children[3].addEventListener('click', function(e) {
+  e.target.style.background = "var(--pricol)";
+  historySortCont.children[0].removeAttribute('style');
+  historySortCont.children[1].removeAttribute('style');
+  historySortCont.children[2].removeAttribute('style');
+  historySort = e.target.textContent.toLowerCase();
+  refreshHistory();
+});
+if (historySort == 'latest') {historySortCont.children[0].style.background = "var(--pricol)"}
+else if (historySort == 'oldest') {historySortCont.children[1].style.background = "var(--pricol)"}
+else if (historySort == 'fastest') {historySortCont.children[2].style.background = "var(--pricol)"}
+else if (historySort == 'slowest') {historySortCont.children[3].style.background = "var(--pricol)"};
 
 // ========== MENU ================================================================================
 
@@ -349,7 +492,7 @@ calc1.children[5].addEventListener('click', function(e) {
   else {e.target.style.background = "var(--pricol)";window.settings.setCalcFormatted(1, true)}
   formulaInput(e.target.parentNode.children[0], 'calc1');
 });
-let calc1LastCalc = {formula:"", fullresult:"", result:"", calc:"calc1", precision:20, time:0, date:Date.now(), version:currentVersion, logged:true};
+let calc1LastCalc = {formula:"", fullresult:"", result:"", calc:"calc1", precision:20, time:0, date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:true};
 // ----- calc1Formula Scrolling -----
 let calc1FormulaScroll = 0;
 let calc1FormulaBlurring = false;
@@ -444,7 +587,7 @@ calc2.children[5].addEventListener('click', function(e) {
   else {e.target.style.background = "var(--pricol)";window.settings.setCalcFormatted(2, true)}
   formulaInput(e.target.parentNode.children[0], 'calc2');
 });
-let calc2LastCalc = {formula:"", fullresult:"", result:"", calc:"calc2", precision:20, time:0, date:Date.now(), logged:true};
+let calc2LastCalc = {formula:"", fullresult:"", result:"", calc:"calc2", precision:20, time:0, date:Date.now(), sys:window.settings.getCalcSys(), logged:true};
 // ----- calc2Formula Scrolling -----
 let calc2FormulaScroll = 0;
 let calc2FormulaBlurring = false;
@@ -539,7 +682,7 @@ calc3.children[5].addEventListener('click', function(e) {
   else {e.target.style.background = "var(--pricol)";window.settings.setCalcFormatted(3, true)}
   formulaInput(e.target.parentNode.children[0], 'calc3');
 });
-let calc3LastCalc = {formula:"", fullresult:"", result:"", calc:"calc3", precision:20, time:0, date:Date.now(), logged:true};
+let calc3LastCalc = {formula:"", fullresult:"", result:"", calc:"calc3", precision:20, time:0, date:Date.now(), sys:window.settings.getCalcSys(), logged:true};
 // ----- calc3Formula Scrolling -----
 let calc3FormulaScroll = 0;
 let calc3FormulaBlurring = false;
@@ -634,7 +777,7 @@ calc4.children[5].addEventListener('click', function(e) {
   else {e.target.style.background = "var(--pricol)";window.settings.setCalcFormatted(4, true)}
   formulaInput(e.target.parentNode.children[0], 'calc4');
 });
-let calc4LastCalc = {formula:"", fullresult:"", result:"", calc:"calc4", precision:20, time:0, date:Date.now(), logged:true};
+let calc4LastCalc = {formula:"", fullresult:"", result:"", calc:"calc4", precision:20, time:0, date:Date.now(), sys:window.settings.getCalcSys(), logged:true};
 // ----- calc4Formula Scrolling -----
 let calc4FormulaScroll = 0;
 let calc4FormulaBlurring = false;
@@ -729,7 +872,7 @@ calc5.children[5].addEventListener('click', function(e) {
   else {e.target.style.background = "var(--pricol)";window.settings.setCalcFormatted(5, true)}
   formulaInput(e.target.parentNode.children[0], 'calc5');
 });
-let calc5LastCalc = {formula:"", fullresult:"", result:"", calc:"calc5", precision:20, time:0, date:Date.now(), logged:true};
+let calc5LastCalc = {formula:"", fullresult:"", result:"", calc:"calc5", precision:20, time:0, date:Date.now(), sys:window.settings.getCalcSys(), logged:true};
 // ----- calc5Formula Scrolling -----
 let calc5FormulaScroll = 0;
 let calc5FormulaBlurring = false;
@@ -824,7 +967,7 @@ calc6.children[5].addEventListener('click', function(e) {
   else {e.target.style.background = "var(--pricol)";window.settings.setCalcFormatted(6, true)}
   formulaInput(e.target.parentNode.children[0], 'calc6');
 });
-let calc6LastCalc = {formula:"", fullresult:"", result:"", calc:"calc6", precision:20, time:0, date:Date.now(), logged:true};
+let calc6LastCalc = {formula:"", fullresult:"", result:"", calc:"calc6", precision:20, time:0, date:Date.now(), sys:window.settings.getCalcSys(), logged:true};
 // ----- calc6Formula Scrolling -----
 let calc6FormulaScroll = 0;
 let calc6FormulaBlurring = false;
@@ -933,22 +1076,25 @@ function formulaInput(e, calc, stack = []) {
     let result = {result:'',full:'',error:null};
     fmt.groupSeparator = el.parentNode.children[5].style.background ? window.settings.getFormatting('thousands') : '';
     fmt.decimalSeparator = window.settings.getFormatting('decimal');
-    if (el.value.length > 0) {result = calculate(el.value, {trigMode:trigMode, decimalSep:window.settings.getFormatting('decimal'), thousandSep:window.settings.getFormatting('thousands')})}; // add settings here
+
+    // Calculate
+    if (el.value.length > 0) {result = calculate(el.value, {trigMode:trigMode, decimalSep:window.settings.getFormatting('decimal'), thousandSep:window.settings.getFormatting('thousands')})};
+
     if (result.error) {
         writeError(calcElements, result.error);
-        if (calc == 'calc1') {calc1LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
-        else if (calc == 'calc2') {calc2LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
-        else if (calc == 'calc3') {calc3LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
-        else if (calc == 'calc4') {calc4LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
-        else if (calc == 'calc5') {calc5LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}}
-        else if (calc == 'calc6') {calc6LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false}};
+        if (calc == 'calc1') {calc1LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}}
+        else if (calc == 'calc2') {calc2LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}}
+        else if (calc == 'calc3') {calc3LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}}
+        else if (calc == 'calc4') {calc4LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}}
+        else if (calc == 'calc5') {calc5LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}}
+        else if (calc == 'calc6') {calc6LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}};
     }
     else {
         clearError(calcElements);
         calcElements.fullresult.value = result.full;
         calcElements.result.value = result.result;
-        if (result.full.length == 0) {_defaultCalc.removeVariable(calc)} else {_defaultCalc.setVariable(calc, result.result)};
-        let lc = {formula:el.value, fullresult:result.full, result:result.result, calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, logged:false};
+        if (result.full.length == 0) {_defaultCalc.removeVariable(calc)} else {_defaultCalc.setVariable(calc, result.fullnonformatted, true)};
+        let lc = {formula:el.value, fullresult:result.full, result:result.result, calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false};
         if (calc == 'calc1') {calc1LastCalc = lc}
         else if (calc == 'calc2') {calc2LastCalc = lc}
         else if (calc == 'calc3') {calc3LastCalc = lc}
@@ -1009,89 +1155,109 @@ let fmt = {
   fractionGroupSize: 0,
   suffix: '',
 };
+let fmtnonformatted = {
+  prefix: '',
+  decimalSeparator: '.',
+  groupSeparator: '',
+  groupSize: 3,
+  secondaryGroupSize: 0,
+  fractionGroupSeparator: ' ',
+  fractionGroupSize: 0,
+  suffix: '',
+};
 
 // ─── PRECISION ────────────────────────────────────────────────────────────────
 let PRECISION = window.settings.getPrecision();
 
-// Configure BigNumber.js global defaults
-if (typeof BigNumber !== 'undefined') {
+function refreshBigNumber() {
   BigNumber.config({
     DECIMAL_PLACES: PRECISION + 10,
-    ROUNDING_MODE: BigNumber.ROUND_DOWN,
+    ROUNDING_MODE: 4,
   });
 }
 
-// ─── GLOBAL BYPASS FLAG ───────────────────────────────────────────────────────
-// When true, all safety limits (e.g. factorial > 1000) are bypassed.
-// WARNING: This can lead to long computation times or memory exhaustion.
 let BYPASS_LIMITS = false;
 
 // ─── HIGH-PRECISION MATH LIBRARY ─────────────────────────────────────────────
 
-function _mkBN() {
-  return BigNumber.clone({ DECIMAL_PLACES: PRECISION + 10, ROUNDING_MODE: 4 });
-}
-
-function _computePI(BN) {
-  // Chudnovsky algorithm
-  // π = (426880 * sqrt(10005)) / Σ
+function _computePI() {
+  // Chudnovsky algorithm with Binary Splitting
+  //
+  // π = (426880 * sqrt(10005)) / Σ_{k=0}^{N} [ (-1)^k * (6k)! * (13591409 + 545140134k) ]
+  //                                             / [ (3k)! * (k!)^3 * 640320^(3k) ]
+  //
+  // Binary splitting computes the partial sum as an exact rational P/Q,
+  // avoiding per-term BigNumber divisions. Only ONE final division is needed.
+  // This typically gives a 3–10× speedup at high precision.
 
   const targetDigits = PRECISION + 10;
   const termsNeeded = Math.ceil(targetDigits / 14) + 2;
 
-  const C = new BN(640320);
-  const C3 = C.times(C).times(C);
+  // Recursively compute P, Q, T for terms [a, b) using binary splitting.
+  // At each leaf (b - a === 1), we compute the exact numerator/denominator
+  // for term k = a without any division.
+  //
+  // The recurrence for the Chudnovsky series:
+  //   P(a,a+1) = (6a-5)(2a-1)(6a-1)
+  //   Q(a,a+1) = a^3 * C3 / 24   [C3 = 640320^3 / 24 = 10939058860032000]
+  //   T(a,a+1) = P(a,a+1) * (A + B*a)  with sign
+  //
+  // For the midpoint split:
+  //   P(a,b) = P(a,m) * P(m,b)
+  //   Q(a,b) = Q(a,m) * Q(m,b)
+  //   T(a,b) = T(a,m) * Q(m,b) + P(a,m) * T(m,b)
 
-  let sum = new BN(0);
-  let a_k = new BN(1);              // factorial ratio
-  let M_k = new BN(13591409);       // linear term
-  let sign = 1;
+  const C3_OVER_24 = new BigNumber("10939058860032000"); // 640320^3 / 24
+  const A = new BigNumber(13591409);
+  const B = new BigNumber(545140134);
 
-  for (let k = 0; k < termsNeeded; k++) {
+  function binarySplit(a, b) {
+    if (b - a === 1) {
+      let Pab, Qab, Tab;
 
-    const term = a_k.times(M_k);
+      if (a === 0) {
+        Pab = new BigNumber(1);
+        Qab = new BigNumber(1);
+      } else {
+        const a_bn = new BigNumber(a);
+        // P is ALWAYS positive — it's just the factorial numerator
+        Pab = new BigNumber(6 * a - 5)
+          .times(2 * a - 1)
+          .times(6 * a - 1);
+        Qab = a_bn.pow(3).times(C3_OVER_24);
+      }
 
-    if (sign > 0) sum = sum.plus(term);
-    else sum = sum.minus(term);
+      // Sign lives only in T, not in P
+      const linear = A.plus(B.times(a));
+      Tab = a % 2 === 0
+        ? Pab.times(linear)
+        : Pab.times(linear).negated();
 
-    sign = -sign;
+      return { P: Pab, Q: Qab, T: Tab };
+    }
+    
+    const m = Math.floor((a + b) / 2);
+    const { P: Pl, Q: Ql, T: Tl } = binarySplit(a, m);
+    const { P: Pr, Q: Qr, T: Tr } = binarySplit(m, b);
 
-    if (k === termsNeeded - 1) break;
-
-    const k1 = new BN(k + 1);
-
-    // Correct factorial ratio recurrence:
-    // a_{k+1} = a_k *
-    // (6k+1)(6k+2)(6k+3)(6k+4)(6k+5)(6k+6)
-    // ------------------------------------
-    // (3k+1)(3k+2)(3k+3)(k+1)^3 * C^3
-
-    a_k = a_k
-      .times(6*k + 1)
-      .times(6*k + 2)
-      .times(6*k + 3)
-      .times(6*k + 4)
-      .times(6*k + 5)
-      .times(6*k + 6)
-      .dividedBy(3*k + 1)
-      .dividedBy(3*k + 2)
-      .dividedBy(3*k + 3)
-      .dividedBy(k1.times(k1).times(k1))
-      .dividedBy(C3);
-
-    M_k = M_k.plus(545140134);
+    return {
+      P: Pl.times(Pr),           // always positive, no sign pollution
+      Q: Ql.times(Qr),
+      T: Tl.times(Qr).plus(Pl.times(Tr)),  // sign already baked into Tl, Tr
+    };
   }
 
-  const sqrt10005 = new BN(10005).sqrt();
-  const constant = new BN(426880).times(sqrt10005);
+  const { Q, T } = binarySplit(0, termsNeeded);
 
-  return constant.dividedBy(sum);
+  // π = 426880 * sqrt(10005) * Q / T
+ const sqrt10005 = new BigNumber(10005).sqrt();
+  return new BigNumber(426880).times(sqrt10005).times(Q).dividedBy(T);
 }
 
 
-function _computeLN2(BN) {
-  const x = new BN(1).dividedBy(3), x2 = x.times(x);
-  const limit = new BN(10).pow(-(PRECISION + 8));
+function _computeLN2() {
+  const x = new BigNumber(1).dividedBy(3), x2 = x.times(x);
+  const limit = new BigNumber(10).pow(-(PRECISION + 8));
   let term = x, sum = x, n = 1;
   while (true) {
     term = term.times(x2); n += 2;
@@ -1102,9 +1268,9 @@ function _computeLN2(BN) {
   return sum.times(2);
 }
 
-function _computeLN10(BN, ln2) {
-  const x = new BN(2).dividedBy(3), x2 = x.times(x);
-  const limit = new BN(10).pow(-(PRECISION + 8));
+function _computeLN10(ln2) {
+  const x = new BigNumber(2).dividedBy(3), x2 = x.times(x);
+  const limit = new BigNumber(10).pow(-(PRECISION + 8));
   let term = x, sum = x, n = 1;
   while (true) {
     term = term.times(x2); n += 2;
@@ -1112,7 +1278,7 @@ function _computeLN10(BN, ln2) {
     sum = sum.plus(next);
     if (next.abs().lte(limit)) break;
   }
-  return new BN(ln2.toString()).plus(sum.times(2));
+  return new BigNumber(ln2.toString()).plus(sum.times(2));
 }
 
 // Lazy-computed constants (recalculated when PRECISION changes)
@@ -1127,8 +1293,7 @@ let _repeatV = null;
 
 function _getPI() {
   if (_piCache === null || _precisionAtLastCompute !== PRECISION) {
-    const BN = _mkBN();
-    _piCache = _computePI(BN);
+    _piCache = _computePI();
     _precisionAtLastCompute = PRECISION;
   }
   return _piCache;
@@ -1136,8 +1301,7 @@ function _getPI() {
 
 function _getLN2() {
   if (_ln2Cache === null || _precisionAtLastCompute !== PRECISION) {
-    const BN = _mkBN();
-    _ln2Cache = _computeLN2(BN);
+    _ln2Cache = _computeLN2();
     _precisionAtLastCompute = PRECISION;
   }
   return _ln2Cache;
@@ -1146,8 +1310,7 @@ function _getLN2() {
 function _getLN10() {
   if (_ln10Cache === null || _precisionAtLastCompute !== PRECISION) {
     const ln2 = _getLN2();
-    const BN = _mkBN();
-    _ln10Cache = _computeLN10(BN, ln2);
+    _ln10Cache = _computeLN10(ln2);
     _precisionAtLastCompute = PRECISION;
   }
   return _ln10Cache;
@@ -1159,14 +1322,7 @@ function _setPrecision(newPrecision) {
   }
   
   PRECISION = newPrecision;
-  
-  // Reconfigure BigNumber.js global defaults
-  if (typeof BigNumber !== 'undefined') {
-    BigNumber.config({
-      DECIMAL_PLACES: PRECISION + 10,
-      ROUNDING_MODE: BigNumber.ROUND_DOWN,
-    });
-  }
+  refreshBigNumber();
   
   // Clear cached constants so they recalculate at new precision
   _piCache = null;
@@ -1174,18 +1330,17 @@ function _setPrecision(newPrecision) {
   _ln10Cache = null;
   _precisionAtLastCompute = PRECISION;
   
-  return null; // Success - no error
+  return null;
 }
 
 function _ln(x) {
-  const BN = _mkBN();
   if (!x.isPositive()) throw new Error('ln() requires positive argument');
-  let m = new BN(x.toString()), k = 0;
-  const two = new BN(2), half = new BN('0.5');
+  let m = new BigNumber(x.toString()), k = 0;
+  const two = new BigNumber(2), half = new BigNumber('0.5');
   while (m.gte(two))  { m = m.dividedBy(two); k++; }
   while (m.lt(half))  { m = m.times(two); k--; }
   const t = m.minus(1).dividedBy(m.plus(1)), t2 = t.times(t);
-  const limit = new BN(10).pow(-(PRECISION + 8));
+  const limit = new BigNumber(10).pow(-(PRECISION + 8));
   let term = t, sum = t, n = 1;
   while (true) {
     term = term.times(t2); n += 2;
@@ -1193,28 +1348,28 @@ function _ln(x) {
     sum = sum.plus(next);
     if (next.abs().lte(limit)) break;
   }
-  return new BN(k).times(new BN(_getLN2().toString())).plus(sum.times(2));
+  return new BigNumber(k).times(new BigNumber(_getLN2().toString())).plus(sum.times(2));
 }
 
-function _log10(x) { return _ln(x).dividedBy(new _mkBN()(_getLN10().toString())); }
-function _log2(x)  { return _ln(x).dividedBy(new _mkBN()(_getLN2().toString())); }
+function _log10(x) { return _ln(x).dividedBy(new BigNumber(_getLN10().toString())); }
+function _log2(x)  { return _ln(x).dividedBy(new BigNumber(_getLN2().toString())); }
 function _logB(x, b) { return _ln(x).dividedBy(_ln(b)); }
 
 function _exp(x) {
-  const BN = _mkBN(), bx = new BN(x.toString()), ln2 = new BN(_getLN2().toString());
+  const bx = new BigNumber(x.toString()), ln2 = new BigNumber(_getLN2().toString());
   const k = bx.dividedBy(ln2).integerValue(BigNumber.ROUND_HALF_UP);
   const r = bx.minus(k.times(ln2));
-  const limit = new BN(10).pow(-(PRECISION + 8));
-  let term = new BN(1), sum = new BN(1), n = 0;
+  const limit = new BigNumber(10).pow(-(PRECISION + 8));
+  let term = new BigNumber(1), sum = new BigNumber(1), n = 0;
   while (true) {
     n++; term = term.times(r).dividedBy(n); sum = sum.plus(term);
     if (term.abs().lte(limit)) break;
   }
-  return sum.times(new BN(2).pow(k));
+  return sum.times(new BigNumber(2).pow(k));
 }
 
-function _reduceAngle(BN, bx) {
-  const pi2 = new BN(_getPI().times(2).toString()), pi = new BN(_getPI().toString());
+function _reduceAngle(bx) {
+  const pi2 = new BigNumber(_getPI().times(2).toString()), pi = new BigNumber(_getPI().toString());
   let r = bx.minus(pi2.times(bx.dividedBy(pi2).integerValue(BigNumber.ROUND_DOWN)));
   if (r.gt(pi))           r = r.minus(pi2);
   if (r.lt(pi.negated())) r = r.plus(pi2);
@@ -1222,8 +1377,8 @@ function _reduceAngle(BN, bx) {
 }
 
 function _sin(x) {
-  const BN = _mkBN(), r = _reduceAngle(BN, new BN(x.toString()));
-  const negR2 = r.times(r).negated(), limit = new BN(10).pow(-(PRECISION + 8));
+  const r = _reduceAngle(new BigNumber(x.toString()));
+  const negR2 = r.times(r).negated(), limit = new BigNumber(10).pow(-(PRECISION + 8));
   let term = r, sum = r, n = 1;
   while (true) {
     term = term.times(negR2).dividedBy((n + 1) * (n + 2)); n += 2;
@@ -1234,9 +1389,9 @@ function _sin(x) {
 }
 
 function _cos(x) {
-  const BN = _mkBN(), r = _reduceAngle(BN, new BN(x.toString()));
-  const negR2 = r.times(r).negated(), limit = new BN(10).pow(-(PRECISION + 8));
-  let term = new BN(1), sum = new BN(1), n = 0;
+  const r = _reduceAngle(new BigNumber(x.toString()));
+  const negR2 = r.times(r).negated(), limit = new BigNumber(10).pow(-(PRECISION + 8));
+  let term = new BigNumber(1), sum = new BigNumber(1), n = 0;
   while (true) {
     term = term.times(negR2).dividedBy((n + 1) * (n + 2)); n += 2;
     sum = sum.plus(term);
@@ -1246,24 +1401,24 @@ function _cos(x) {
 }
 
 function _tan(x) {
-  const BN = _mkBN(), c = _cos(x);
-  if (c.abs().lt(new BN(10).pow(-(PRECISION - 4)))) throw new Error('tan() undefined at this value');
+  const c = _cos(x);
+  if (c.abs().lt(new BigNumber(10).pow(-(PRECISION - 4)))) throw new Error('tan() undefined at this value');
   return _sin(x).dividedBy(c);
 }
 
 function _atan(x) {
-  const BN = _mkBN(), bx = new BN(x.toString()), one = new BN(1);
-  const piover2 = new BN(_getPI().dividedBy(2).toString());
+  const bx = new BigNumber(x.toString()), one = new BigNumber(1);
+  const piover2 = new BigNumber(_getPI().dividedBy(2).toString());
   if (bx.abs().gt(one)) {
-    const sign = bx.isNegative() ? new BN(-1) : one;
+    const sign = bx.isNegative() ? new BigNumber(-1) : one;
     return sign.times(piover2).minus(_atan(one.dividedBy(bx)));
   }
-  let reduced = bx, factor = new BN(1);
+  let reduced = bx, factor = new BigNumber(1);
   for (let i = 0; i < 3; i++) {
     reduced = reduced.dividedBy(one.plus(one.plus(reduced.times(reduced)).sqrt()));
     factor  = factor.times(2);
   }
-  const negR2 = reduced.times(reduced).negated(), limit = new BN(10).pow(-(PRECISION + 8));
+  const negR2 = reduced.times(reduced).negated(), limit = new BigNumber(10).pow(-(PRECISION + 8));
   let term = reduced, sum = reduced, n = 1;
   while (true) {
     term = term.times(negR2); n += 2;
@@ -1275,25 +1430,25 @@ function _atan(x) {
 }
 
 function _asin(x) {
-  const BN = _mkBN(), bx = new BN(x.toString()), one = new BN(1);
+  const bx = new BigNumber(x.toString()), one = new BigNumber(1);
   if (bx.abs().gt(one)) throw new Error('asin() argument must be in [-1, 1]');
   if (bx.abs().eq(one)) return bx.isNegative()
-    ? new BN(_getPI().dividedBy(2).toString()).negated() : new BN(_getPI().dividedBy(2).toString());
+    ? new BigNumber(_getPI().dividedBy(2).toString()).negated() : new BigNumber(_getPI().dividedBy(2).toString());
   return _atan(bx.dividedBy(one.minus(bx.times(bx)).sqrt()));
 }
 
-function _acos(x) { return new _mkBN()(_getPI().dividedBy(2).toString()).minus(_asin(x)); }
+function _acos(x) { return new BigNumber(_getPI().dividedBy(2).toString()).minus(_asin(x)); }
 
 function _sinh(x) {
-  const BN = _mkBN(), ep = _exp(x), em = _exp(new BN(x.toString()).negated());
+  const ep = _exp(x), em = _exp(new BigNumber(x.toString()).negated());
   return ep.minus(em).dividedBy(2);
 }
 function _cosh(x) {
-  const BN = _mkBN(), ep = _exp(x), em = _exp(new BN(x.toString()).negated());
+  const ep = _exp(x), em = _exp(new BigNumber(x.toString()).negated());
   return ep.plus(em).dividedBy(2);
 }
 function _tanh(x) {
-  const BN = _mkBN(), ep = _exp(x), em = _exp(new BN(x.toString()).negated());
+  const ep = _exp(x), em = _exp(new BigNumber(x.toString()).negated());
   const num = ep.minus(em), den = ep.plus(em);
   if (den.isZero()) throw new Error('tanh() undefined');
   return num.dividedBy(den);
@@ -1302,18 +1457,17 @@ function _tanh(x) {
 // High-precision power function for non-integer exponents
 // Uses a^b = exp(b * ln(a)) for non-integers, direct computation for integers
 function _power(base, exponent) {
-  const BN = _mkBN();
-  const b = new BN(base.toString());
-  const e = new BN(exponent.toString());
+  const b = new BigNumber(base.toString());
+  const e = new BigNumber(exponent.toString());
   
   // Handle special cases
   if (b.isZero()) {
-    if (e.isPositive()) return new BN(0);
+    if (e.isPositive()) return new BigNumber(0);
     throw new Error('0^0 or 0^negative is undefined');
   }
-  if (e.isZero()) return new BN(1);
+  if (e.isZero()) return new BigNumber(1);
   if (e.eq(1)) return b;
-  if (b.eq(1)) return new BN(1);
+  if (b.eq(1)) return new BigNumber(1);
   
   // Check if exponent is an integer
   if (e.isInteger()) {
@@ -1335,66 +1489,8 @@ function _power(base, exponent) {
   return _exp(product);
 }
 
-function _toRad(x) { return new _mkBN()(x.toString()).times(_getPI().toString()).dividedBy(180); }
-function _toDeg(x) { return new _mkBN()(x.toString()).times(180).dividedBy(_getPI().toString()); }
-
-
-// ─── HIGH-PRECISION POWER FUNCTION ────────────────────────────────────────────
-// Computes base^exponent for any real exponent using the formula: a^b = e^(b*ln(a))
-// For integer exponents, uses fast repeated multiplication
-// For non-integer exponents, uses logarithms (accurate but slower)
-function _highPrecisionPow(base, exponent) {
-  const BN = _mkBN();
-  const b = new BN(base.toString());
-  const e = new BN(exponent.toString());
-  
-  // Handle special cases
-  if (b.isZero()) {
-    if (e.isZero()) throw new Error('0^0 is undefined');
-    if (e.isNegative()) throw new Error('0 to negative power is undefined');
-    return new BigNumber(0);
-  }
-  
-  if (e.isZero()) return new BigNumber(1);
-  if (e.equals(1)) return base;
-  
-  // For negative bases with non-integer exponents, result is complex (not supported)
-  if (b.isNegative() && !e.isInteger()) {
-    throw new Error('Negative base with non-integer exponent (complex result)');
-  }
-  
-  // For integer exponents, use fast repeated multiplication
-  if (e.isInteger()) {
-    const exp = e.toNumber();
-    if (Math.abs(exp) > 10000 && !BYPASS_LIMITS) {
-      const err = new Error('Power exponent > 10000 (safety limit)');
-      err.bypassable = true;
-      throw err;
-    }
-    
-    let result = new BN(1);
-    let absExp = Math.abs(exp);
-    let localBase = new BN(b.toString());
-    
-    while (absExp > 0) {
-      if (absExp % 2 === 1) result = result.times(localBase);
-      localBase = localBase.times(localBase);
-      absExp = Math.floor(absExp / 2);
-    }
-    
-    if (exp < 0) result = new BN(1).dividedBy(result);
-    return new BigNumber(result.toString());
-  }
-  
-  // For non-integer exponents: a^b = e^(b * ln(a))
-  // Handle negative base by computing abs(base)^exponent and handling sign
-  const absBase = b.abs();
-  const lnBase = _ln(new BigNumber(absBase.toString()));
-  const product = new BN(lnBase.toString()).times(e);
-  const result = _exp(new BigNumber(product.toString()));
-  
-  return new BigNumber(result.toString());
-}
+function _toRad(x) { return new BigNumber(x.toString()).times(_getPI().toString()).dividedBy(180); }
+function _toDeg(x) { return new BigNumber(x.toString()).times(180).dividedBy(_getPI().toString()); }
 
 // ─── UNIT CONVERSION TABLE ────────────────────────────────────────────────────
 const UNIT_CATEGORIES = [
@@ -1723,6 +1819,10 @@ const UNIT_CATEGORIES = [
         toBase: x => x.times('1e12'), fromBase: x => x.dividedBy('1e12') },
       { aliases: ['pb', 'petabyte', 'petabytes'],
         toBase: x => x.times('1e15'), fromBase: x => x.dividedBy('1e15') },
+      { aliases: ['eb', 'exabyte', 'exabytes'],
+        toBase: x => x.times('1e18'), fromBase: x => x.dividedBy('1e18') },
+      { aliases: ['zb', 'zettabyte', 'zettabytes'],
+        toBase: x => x.times('1e21'), fromBase: x => x.dividedBy('1e21') },
       { aliases: ['kib', 'kibibyte', 'kibibytes'],
         toBase: x => x.times(1024), fromBase: x => x.dividedBy(1024) },
       { aliases: ['mib', 'mebibyte', 'mebibytes'],
@@ -1744,20 +1844,20 @@ const UNIT_CATEGORIES = [
       { aliases: ['rad', 'radian', 'radians'],
         toBase: x => x, fromBase: x => x },
       { aliases: ['deg', 'degree', 'degrees', '°'],
-        toBase: x => new _mkBN()(x.toString()).times(_getPI().toString()).dividedBy(180),
-        fromBase: x => new _mkBN()(x.toString()).times(180).dividedBy(_getPI().toString()) },
+        toBase: x => new BigNumber(x.toString()).times(_getPI().toString()).dividedBy(180),
+        fromBase: x => new BigNumber(x.toString()).times(180).dividedBy(_getPI().toString()) },
       { aliases: ['grad', 'gradian', 'gradians'],
-        toBase: x => new _mkBN()(x.toString()).times(_getPI().toString()).dividedBy(200),
-        fromBase: x => new _mkBN()(x.toString()).times(200).dividedBy(_getPI().toString()) },
+        toBase: x => new BigNumber(x.toString()).times(_getPI().toString()).dividedBy(200),
+        fromBase: x => new BigNumber(x.toString()).times(200).dividedBy(_getPI().toString()) },
       { aliases: ['turn', 'turns', 'revolution', 'revolutions', 'rev'],
-        toBase: x => new _mkBN()(x.toString()).times(_getPI().times(2).toString()),
-        fromBase: x => new _mkBN()(x.toString()).dividedBy(_getPI().times(2).toString()) },
+        toBase: x => new BigNumber(x.toString()).times(_getPI().times(2).toString()),
+        fromBase: x => new BigNumber(x.toString()).dividedBy(_getPI().times(2).toString()) },
       { aliases: ['arcmin', 'arcminute', 'arcminutes', 'minute of arc', 'minutes of arc', "'"],
-        toBase: x => new _mkBN()(x.toString()).times(_getPI().toString()).dividedBy('10800'),
-        fromBase: x => new _mkBN()(x.toString()).times('10800').dividedBy(_getPI().toString()) },
+        toBase: x => new BigNumber(x.toString()).times(_getPI().toString()).dividedBy('10800'),
+        fromBase: x => new BigNumber(x.toString()).times('10800').dividedBy(_getPI().toString()) },
       { aliases: ['arcsec', 'arcsecond', 'arcseconds', 'second of arc', 'seconds of arc', '"'],
-        toBase: x => new _mkBN()(x.toString()).times(_getPI().toString()).dividedBy('648000'),
-        fromBase: x => new _mkBN()(x.toString()).times('648000').dividedBy(_getPI().toString()) },
+        toBase: x => new BigNumber(x.toString()).times(_getPI().toString()).dividedBy('648000'),
+        fromBase: x => new BigNumber(x.toString()).times('648000').dividedBy(_getPI().toString()) },
     ],
   },
   // ── Frequency (base: hertz) ──────────────────────────────────────────────────
@@ -1802,25 +1902,71 @@ const _defaultVariables = {
 };
 
 // ─── FACTORIAL ────────────────────────────────────────────────────────────────
-function factorial(n) {
-  const num = n.toNumber();
-  if (!Number.isInteger(num) || num < 0) throw new Error('Factorial requires non-negative integer');
-  if (num > 1000 && !BYPASS_LIMITS) {
-    const err = new Error('Factorial argument > 1000 (safety limit)');
+function factorialBinSplit(n) {
+  if (n < 2n) return 1n;
+  return productRange(2n, n);
+}
+
+function productRange(lo, hi) {
+  if (lo === hi) return lo;
+  if (hi - lo === 1n) return lo * hi;
+  const mid = (lo + hi) >> 1n;          // bit-shift = fast /2
+  return productRange(lo, mid) * productRange(mid + 1n, hi);
+}
+
+function factorial(n, sys = 'decimal') {
+  const N = sys == 'integer' ? n : BigInt(n.toFixed());
+  if (sys == 'decimal') {
+    if (!n.isInteger()) {throw new Error('Factorial requires non-negative integer')};
+  }
+  
+  if (N < 0n || N < 0n) throw new Error('Factorial requires non-negative integer');
+  if (N > 10000 && !BYPASS_LIMITS) {
+    const err = new Error('Factorial argument > 10000 (safety limit)');
     err.bypassable = true;
     throw err;
   }
-  let r = new BigNumber(1);
-  for (let i = 2; i <= num; i++) r = r.multipliedBy(i);
-  return r;
+
+  return sys == 'integer' ? factorialBinSplit(N) : new BigNumber(factorialBinSplit(N));
+}
+
+function doubleFactorial(n, sys = 'decimal') {
+  const N = sys == 'integer' ? n : BigInt(n.toFixed());
+  if (sys == 'decimal') {
+    if (!n.isInteger() || n.isNegative()) throw new Error('Double factorial requires non-negative integer');
+  }
+
+  if (N < 0n) throw new Error('Double factorial requires non-negative integer');
+  if (N > 10000n && !BYPASS_LIMITS) {
+    const err = new Error('Double factorial argument > 10000 (safety limit)');
+    err.bypassable = true;
+    throw err;
+  }
+
+  let r = 1n;
+  let i = N % 2n === 0n ? 2n : 1n;
+  while (i <= N) { r *= i; i += 2n; }
+
+  return sys == 'integer' ? r : new BigNumber(r.toString());
 }
 
 // ─── FUNCTIONS ────────────────────────────────────────────────────────────────
 
 const FUNCTIONS = {
-  sqrt:  ([a])    => { if (a === undefined) throw new Error('sqrt() takes 1 argument'); if (a.isNegative()) throw new Error('sqrt() of negative'); return a.sqrt(); },
-  pow:   ([a, b]) => { 
+  sqrt:  (sys, [a])    => {
+    if (sys === 'integer') throw new Error('sqrt() not available with integer calculation');
+    if (a === undefined) throw new Error('sqrt() takes 1 argument');
+    if (a.isNegative()) throw new Error('sqrt() of negative');
+    return a.sqrt();
+  },
+  pow:   (sys, [a, b]) => {
     if (a === undefined || b === undefined) throw new Error('pow() takes 2 arguments');
+    if (sys === 'integer') {
+      if (b < 0n) throw new Error('pow() exponent must be non-negative with integer calculation');
+      if (b !== BigInt(b) && typeof b === 'bigint' ? false : !Number.isInteger(Number(b)))
+        throw new Error('pow() exponent must be non-negative with integer calculation');
+      return a ** b;
+    }
     const exp = b.toNumber();
     if (Math.abs(exp) > 1000 && !BYPASS_LIMITS) {
       const err = new Error('Power exponent > 1000 (safety limit)');
@@ -1829,76 +1975,184 @@ const FUNCTIONS = {
     }
     return _power(a, b);
   },
-  abs:   ([a])    => { if (a === undefined) throw new Error('abs() takes 1 argument'); return a.abs(); },
+  exp:   (sys, [a]) => {
+    if (sys === 'integer') throw new Error('exp() not available with integer calculation');
+    if (a === undefined) throw new Error('exp() takes 1 argument');
+    return new BigNumber(_exp(a).toString());
+  },
 
-  log: (args) => {
+  log: (sys, args) => {
+    if (sys === 'integer') throw new Error('log() not available with integer calculation');
     if (args.length === 1)      return new BigNumber(_log10(args[0]).toString());
     if (args.length === 2)      return new BigNumber(_logB(args[0], args[1]).toString());
     throw new Error('log() takes 1 or 2 arguments');
   },
-  log2:  ([a]) => { if (a === undefined) throw new Error('log2() takes 1 argument');  return new BigNumber(_log2(a).toString()); },
-  log10: ([a]) => { if (a === undefined) throw new Error('log10() takes 1 argument'); return new BigNumber(_log10(a).toString()); },
-  ln:    ([a]) => { if (a === undefined) throw new Error('ln() takes 1 argument');    return new BigNumber(_ln(a).toString()); },
-  exp:   ([a]) => { if (a === undefined) throw new Error('exp() takes 1 argument');   return new BigNumber(_exp(a).toString()); },
+  log2:  (sys, [a]) => {
+    if (sys === 'integer') throw new Error('log2() not available with integer calculation');
+    if (a === undefined) throw new Error('log2() takes 1 argument');
+    return new BigNumber(_log2(a).toString());
+  },
+  log10: (sys, [a]) => {
+    if (sys === 'integer') throw new Error('log10() not available with integer calculation');
+    if (a === undefined) throw new Error('log10() takes 1 argument');
+    return new BigNumber(_log10(a).toString());
+  },
+  ln:    (sys, [a]) => {
+    if (sys === 'integer') throw new Error('ln() not available with integer calculation');
+    if (a === undefined) throw new Error('ln() takes 1 argument');
+    return new BigNumber(_ln(a).toString());
+  },
 
-  ceil:  ([a])    => { if (a === undefined) throw new Error('ceil() takes 1 argument');  return a.integerValue(BigNumber.ROUND_CEIL); },
-  floor: ([a])    => { if (a === undefined) throw new Error('floor() takes 1 argument'); return a.integerValue(BigNumber.ROUND_FLOOR); },
-  round: ([a, b]) => {
+  abs:   (sys, [a])    => {
+    if (a === undefined) throw new Error('abs() takes 1 argument');
+    if (sys === 'integer') return a < 0n ? -a : a;
+    return a.abs();
+  },
+  mod: (sys, [a, b]) => {
+    if (a === undefined || b === undefined) throw new Error('mod() takes 2 arguments');
+    if (sys === 'integer') return a % b;
+    return a.modulo(b);
+  },
+
+  ceil:  (sys, [a])    => {
+    if (a === undefined) throw new Error('ceil() takes 1 argument');
+    if (sys === 'integer') return a;
+    return a.integerValue(BigNumber.ROUND_CEIL);
+  },
+  floor: (sys, [a])    => {
+    if (a === undefined) throw new Error('floor() takes 1 argument');
+    if (sys === 'integer') return a;
+    return a.integerValue(BigNumber.ROUND_FLOOR);
+  },
+  round: (sys, [a, b]) => {
     if (a === undefined) throw new Error('round() takes 1 or 2 arguments');
+    if (sys === 'integer') {
+      if (b !== undefined && b > 0) throw new Error('round() must be 0 decimal places with integer calculation');
+      return a;
+    }
     const dp = b !== undefined ? b.toNumber() : 0;
     return a.decimalPlaces(dp, BigNumber.ROUND_HALF_UP);
   },
 
-  min: (args) => { if (!args.length) throw new Error('min() needs ≥1 argument'); return args.reduce((a, b) => a.lte(b) ? a : b); },
-  max: (args) => { if (!args.length) throw new Error('max() needs ≥1 argument'); return args.reduce((a, b) => a.gte(b) ? a : b); },
-  mod: ([a, b]) => { if (a === undefined || b === undefined) throw new Error('mod() takes 2 arguments'); return a.modulo(b); },
-
-  rad: ([a]) => { if (a === undefined) throw new Error('rad() takes 1 argument'); return new BigNumber(_toRad(a).toString()); },
-  deg: ([a]) => { if (a === undefined) throw new Error('deg() takes 1 argument'); return new BigNumber(_toDeg(a).toString()); },
-
-  sin: ([a], tm) => { if (a === undefined) throw new Error('sin() takes 1 argument'); return new BigNumber(_sin(tm === 'deg' ? _toRad(a) : a).toString()); },
-  cos: ([a], tm) => { if (a === undefined) throw new Error('cos() takes 1 argument'); return new BigNumber(_cos(tm === 'deg' ? _toRad(a) : a).toString()); },
-  tan: ([a], tm) => { if (a === undefined) throw new Error('tan() takes 1 argument'); return new BigNumber(_tan(tm === 'deg' ? _toRad(a) : a).toString()); },
-  asin: ([a], tm) => { if (a === undefined) throw new Error('asin() takes 1 argument'); const r = _asin(a); return new BigNumber(tm === 'deg' ? _toDeg(r).toString() : r.toString()); },
-  acos: ([a], tm) => { if (a === undefined) throw new Error('acos() takes 1 argument'); const r = _acos(a); return new BigNumber(tm === 'deg' ? _toDeg(r).toString() : r.toString()); },
-  atan: ([a], tm) => { if (a === undefined) throw new Error('atan() takes 1 argument'); const r = _atan(a); return new BigNumber(tm === 'deg' ? _toDeg(r).toString() : r.toString()); },
-
-  sinh: ([a]) => { if (a === undefined) throw new Error('sinh() takes 1 argument'); return new BigNumber(_sinh(a).toString()); },
-  cosh: ([a]) => { if (a === undefined) throw new Error('cosh() takes 1 argument'); return new BigNumber(_cosh(a).toString()); },
-  tanh: ([a]) => { if (a === undefined) throw new Error('tanh() takes 1 argument'); return new BigNumber(_tanh(a).toString()); },
-
-  d: ([a]) => {
-    if (a === undefined) throw new Error('d() takes 1 argument');
-    const v = a.abs();
-    return v.minus(v.integerValue(BigNumber.ROUND_FLOOR));
+  min: (sys, args) => {
+    if (!args.length) throw new Error('min() needs ≥1 argument');
+    if (sys === 'integer') return args.reduce((a, b) => a <= b ? a : b);
+    return args.reduce((a, b) => a.lte(b) ? a : b);
   },
-  sum:  (args) => { if (!args.length) throw new Error('sum() needs ≥1 argument'); return args.reduce((acc, v) => acc.plus(v), new BigNumber(0)); },
-  avg:  (args) => { if (!args.length) throw new Error('avg() needs ≥1 argument'); return args.reduce((acc, v) => acc.plus(v), new BigNumber(0)).dividedBy(args.length); },
-  dist: ([x1,y1,x2,y2]) => {
+  max: (sys, args) => {
+    if (!args.length) throw new Error('max() needs ≥1 argument');
+    if (sys === 'integer') return args.reduce((a, b) => a >= b ? a : b);
+    return args.reduce((a, b) => a.gte(b) ? a : b);
+  },
+  sum:  (sys, args) => {
+    if (!args.length) throw new Error('sum() needs ≥1 argument');
+    if (sys === 'integer') return args.reduce((acc, v) => acc + v, 0n);
+    return args.reduce((acc, v) => acc.plus(v), new BigNumber(0));
+  },
+  avg:  (sys, args) => {
+    if (!args.length) throw new Error('avg() needs ≥1 argument');
+    if (sys === 'integer') throw new Error('avg() not available with integer calculation');
+    return args.reduce((acc, v) => acc.plus(v), new BigNumber(0)).dividedBy(args.length);
+  },
+
+  sin: (sys, [a], tm) => {
+    if (sys === 'integer') throw new Error('sin() not available with integer calculation');
+    if (a === undefined) throw new Error('sin() takes 1 argument');
+    return new BigNumber(_sin(tm === 'deg' ? _toRad(a) : a).toString());
+  },
+  cos: (sys, [a], tm) => {
+    if (sys === 'integer') throw new Error('cos() not available with integer calculation');
+    if (a === undefined) throw new Error('cos() takes 1 argument');
+    return new BigNumber(_cos(tm === 'deg' ? _toRad(a) : a).toString());
+  },
+  tan: (sys, [a], tm) => {
+    if (sys === 'integer') throw new Error('tan() not available with integer calculation');
+    if (a === undefined) throw new Error('tan() takes 1 argument');
+    return new BigNumber(_tan(tm === 'deg' ? _toRad(a) : a).toString());
+  },
+  asin: (sys, [a], tm) => {
+    if (sys === 'integer') throw new Error('asin() not available with integer calculation');
+    if (a === undefined) throw new Error('asin() takes 1 argument');
+    const r = _asin(a);
+    return new BigNumber(tm === 'deg' ? _toDeg(r).toString() : r.toString());
+  },
+  acos: (sys, [a], tm) => {
+    if (sys === 'integer') throw new Error('acos() not available with integer calculation');
+    if (a === undefined) throw new Error('acos() takes 1 argument');
+    const r = _acos(a);
+    return new BigNumber(tm === 'deg' ? _toDeg(r).toString() : r.toString());
+  },
+  atan: (sys, [a], tm) => {
+    if (sys === 'integer') throw new Error('atan() not available with integer calculation');
+    if (a === undefined) throw new Error('atan() takes 1 argument');
+    const r = _atan(a);
+    return new BigNumber(tm === 'deg' ? _toDeg(r).toString() : r.toString());
+  },
+  sinh: (sys, [a]) => {
+    if (sys === 'integer') throw new Error('sinh() not available with integer calculation');
+    if (a === undefined) throw new Error('sinh() takes 1 argument');
+    return new BigNumber(_sinh(a).toString());
+  },
+  cosh: (sys, [a]) => {
+    if (sys === 'integer') throw new Error('cosh() not available with integer calculation');
+    if (a === undefined) throw new Error('cosh() takes 1 argument');
+    return new BigNumber(_cosh(a).toString());
+  },
+  tanh: (sys, [a]) => {
+    if (sys === 'integer') throw new Error('tanh() not available with integer calculation');
+    if (a === undefined) throw new Error('tanh() takes 1 argument');
+    return new BigNumber(_tanh(a).toString());
+  },
+
+  rad: (sys, [a]) => {
+    if (sys === 'integer') throw new Error('rad() not available with integer calculation');
+    if (a === undefined) throw new Error('rad() takes 1 argument');
+    return new BigNumber(_toRad(a).toString());
+  },
+  deg: (sys, [a]) => {
+    if (sys === 'integer') throw new Error('deg() not available with integer calculation');
+    if (a === undefined) throw new Error('deg() takes 1 argument');
+    return new BigNumber(_toDeg(a).toString());
+  },
+
+  dist: (sys, [x1,y1,x2,y2]) => {
+    if (sys === 'integer') throw new Error('dist() not available with integer calculation');
     if ([x1,y1,x2,y2].some(v=>v===undefined)) throw new Error('dist() takes 4 arguments');
     const dx=x2.minus(x1), dy=y2.minus(y1);
     return dx.times(dx).plus(dy.times(dy)).sqrt();
   },
-  dist3: ([x1,y1,z1,x2,y2,z2]) => {
+  dist3: (sys, [x1,y1,z1,x2,y2,z2]) => {
+    if (sys === 'integer') throw new Error('dist3() not available with integer calculation');
     if ([x1,y1,z1,x2,y2,z2].some(v=>v===undefined)) throw new Error('dist3() takes 6 arguments');
     const dx=x2.minus(x1), dy=y2.minus(y1), dz=z2.minus(z1);
     return dx.times(dx).plus(dy.times(dy)).plus(dz.times(dz)).sqrt();
   },
-  sound: (args) => {
+
+  sphere: (sys, [v, t]) => {
+    if (sys === 'integer') throw new Error('sphere() not available with integer calculation');
+    const pi = new BigNumber(_getPI().toString());
+    if (t !== undefined && new BigNumber(1).comparedTo(t) === 0) {v = v.dividedBy(2)}
+    else if (t !== undefined && new BigNumber(2).comparedTo(t) === 0) {v = v.dividedBy(pi).dividedBy(2)};
+    return new BigNumber(4).dividedBy(new BigNumber(3)).times(pi).times(_power(new BigNumber(v), new BigNumber(3)));
+  },
+
+  sound: (sys, args) => {
+    if (sys === 'integer') throw new Error('sound() not available with integer calculation');
+
     // 1 argument: sound(temperature_C) - simplified formula
     // 3 arguments: sound(temperature_C, pressure_kPa, relative_humidity_percent) - Cramer equation (1993)
-    
+
     if (args.length === 1) return _power(new BigNumber(args[0]).plus(273.15).dividedBy(273.15), 0.5).times(331.228);
-    
+
     if (args.length === 3) {
       // Cramer equation (1993) - NIST standard for speed of sound in humid air
-      // Reference: O. Cramer, "The variation of the specific heat ratio and the speed of sound in air 
+      // Reference: O. Cramer, "The variation of the specific heat ratio and the speed of sound in air
       // with temperature, pressure, humidity, and CO2 concentration", J. Acoust. Soc. Am. 93, 2510 (1993)
-      
+
       const T_C = new BigNumber(args[0]);  // Temperature in Celsius
       const P_kPa = new BigNumber(args[1]); // Pressure in kPa
       const RH = new BigNumber(args[2]);    // Relative humidity (0-100%)
-      
+
       // Validate inputs
       if (RH.lt(0) || RH.gt(100)) {
         throw new Error('Relative humidity must be between 0 and 100');
@@ -1906,63 +2160,152 @@ const FUNCTIONS = {
       if (P_kPa.lte(0)) {
         throw new Error('Pressure must be positive');
       }
-      
+
       // Calculate saturation vapor pressure (enhanced Arden Buck equation)
       // e_sat = 0.61121 * exp((18.678 - T/234.5) * T / (257.14 + T))
       const T_factor1 = new BigNumber('18.678').minus(T_C.dividedBy('234.5'));
       const T_factor2 = T_C.dividedBy(T_C.plus('257.14'));
       const exp_arg = T_factor1.times(T_factor2);
       const e_sat = new BigNumber('0.61121').times(_exp(exp_arg));
-      
+
       // Actual vapor pressure
       const e = e_sat.times(RH).dividedBy(100);
-      
+
       // Calculate enhancement factor f (accounts for non-ideal gas behavior)
       const alpha = new BigNumber('1.00062');
       const beta = new BigNumber('3.14e-8').times(P_kPa.times(1000)); // Convert kPa to Pa
       const gamma = new BigNumber('5.6e-7').times(T_C.pow(2));
       const f = alpha.plus(beta).plus(gamma);
-      
+
       // Recalculate mole fraction with enhancement factor
       const x_w_enhanced = f.times(e).dividedBy(P_kPa);
-      
+
       // Speed of sound using Cramer's equation
       // c = 331.5024 + 0.603055*T_C - 0.000528*T_C^2 + (0.1495874*T_C + 51.471935 - 0.000782*T_C^2) * x_w
       //     - (1.82e-7 + 3.73e-8*T_C - 2.93e-10*T_C^2) * P_Pa + (-85.20931 - 0.228525*T_C + 5.91e-5*T_C^2) * x_w^2
       //     - (2.835149 - 2.15e-13*P_Pa^2 + 29.179762*x_w + 0.000486*x_w^2)
-      
+
       const T_C_sq = T_C.pow(2);
       const P_Pa = P_kPa.times(1000); // Convert to Pascals
-      const P_Pa_sq = P_Pa.pow(2);
       const x_w_sq = x_w_enhanced.pow(2);
-      
+
       // Term 1: Base temperature dependence
       const term1 = new BigNumber('331.5024')
         .plus(new BigNumber('0.603055').times(T_C))
         .minus(new BigNumber('0.000528').times(T_C_sq));
-      
+
       // Term 2: Humidity effect (first order)
       const term2_coeff = new BigNumber('0.1495874').times(T_C)
         .plus('51.471935')
         .minus(new BigNumber('0.000782').times(T_C_sq));
       const term2 = term2_coeff.times(x_w_enhanced);
-      
+
       // Term 3: Pressure effect
       const term3_coeff = new BigNumber('1.82e-7')
         .plus(new BigNumber('3.73e-8').times(T_C))
         .minus(new BigNumber('2.93e-10').times(T_C_sq));
       const term3 = term3_coeff.times(P_Pa);
-      
+
       // Term 4: Humidity effect (second order)
       const term4_coeff = new BigNumber('-85.20931')
         .minus(new BigNumber('0.228525').times(T_C))
         .plus(new BigNumber('5.91e-5').times(T_C_sq));
       const term4 = term4_coeff.times(x_w_sq);
-      
+
       return term1.plus(term2).minus(term3).plus(term4);
     }
-    
+
     throw new Error('sound() takes 1 or 3 arguments');
+  },
+
+  fibonacci: (sys, [n]) => {
+    if (n === undefined) throw new Error('fibonacci() takes 1 argument');
+    n = BigInt(n);
+    if ((n > 10000n || n < -10000n) && !BYPASS_LIMITS) {
+      const err = new Error('Fibonacci > 10000 (safety limit)');
+      err.bypassable = true;
+      throw err;
+    }
+
+    const isNegative = n < 0n;
+    const absN = isNegative ? -n : n;
+
+    // Fast doubling — O(log n) BigInt multiplications
+    const fibPair = (k) => {
+      if (k === 0n) return [0n, 1n];
+      const [a, b] = fibPair(k >> 1n);
+      const c = a * ((b << 1n) - a);
+      const d = a * a + b * b;
+      return (k & 1n) === 0n ? [c, d] : [d, c + d];
+    };
+
+    let result = fibPair(absN)[0];
+    if (isNegative && absN % 2n === 0n) result = -result;
+
+    return sys === 'integer' ? result : new BigNumber(result.toString());
+  },
+  prime: (sys, [n]) => {
+    if (n === undefined) throw new Error('prime() takes 1 argument');
+
+    const nInt = sys === 'integer'
+      ? Number(n < 0n ? -n : n)
+      : n.integerValue(BigNumber.ROUND_FLOOR).toNumber();
+
+    if (nInt < 1) throw new Error('prime() only supports positive integers');
+
+    if (nInt > 10000 && !BYPASS_LIMITS) {
+      const err = new Error('nth prime > 10000 (safety limit)');
+      err.bypassable = true;
+      throw err;
+    }
+
+    const toResult = (p) => sys === 'integer' ? BigInt(p) : new BigNumber(p);
+
+    const smallPrimes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29];
+    if (nInt <= smallPrimes.length) return toResult(smallPrimes[nInt - 1]);
+
+    const logN = Math.log(nInt);
+    const limit = Math.ceil(nInt * (logN + Math.log(logN))) + 3;
+
+    const sqrtLimit = Math.ceil(Math.sqrt(limit));
+    const smallSieve = new Uint8Array(sqrtLimit + 1);
+    smallSieve.fill(1);
+    smallSieve[0] = smallSieve[1] = 0;
+    for (let i = 2; i * i <= sqrtLimit; i++) {
+      if (smallSieve[i]) {
+        for (let j = i * i; j <= sqrtLimit; j += i) smallSieve[j] = 0;
+      }
+    }
+    const basePrimes = [];
+    for (let i = 2; i <= sqrtLimit; i++) if (smallSieve[i]) basePrimes.push(i);
+
+    const SEGMENT = 1 << 19;
+    const seg = new Uint8Array(SEGMENT);
+    let count = 0;
+
+    for (let low = 2; low <= limit; low += SEGMENT) {
+      const high = Math.min(low + SEGMENT - 1, limit);
+      const size = high - low + 1;
+      seg.fill(1, 0, size);
+
+      for (const p of basePrimes) {
+        if (p * p > high) break;
+        let start = Math.ceil(low / p) * p;
+        if (start === p) start += p;
+        for (let j = start - low; j < size; j += p) seg[j] = 0;
+      }
+
+      if (low <= 1) seg[1 - low] = 0;
+
+      for (let j = 0; j < size; j++) {
+        if (seg[j]) {
+          count++;
+          if (count === nInt) return toResult(low + j);
+        }
+      }
+    }
+
+    throw new Error('prime() failed to find nth prime (bound too tight)');
   },
 };
 
@@ -1995,17 +2338,7 @@ function _processNumToken(token, decimalSep, thousandSep) {
   return token;
 }
 
-function preprocess(input, decimalSep, thousandSep, variables) {
-  // Step 1: variable substitution — raw and first, before anything else.
-  // Each value is wrapped in parentheses for operator precedence.
-  //
-  // Variables can reference other variables (e.g. var="othervar/5"), so we
-  // repeat the substitution pass until the string stops changing (fixed point).
-  // Circular references (a="b+1", b="a+1") are detected via a seen-set and
-  // throw a bypassable error so the UI can surface it clearly.
-  //
-  // Sort names longest-first so longer names always match before shorter ones
-  // that share a prefix (e.g. "rate2" before "rate").
+function preprocess(input, decimalSep, thousandSep, variables, sys) {
   const varNames = Object.keys(variables).sort((a, b) => b.length - a.length);
   const regexes  = Object.fromEntries(
     varNames.map(name => {
@@ -2014,18 +2347,15 @@ function preprocess(input, decimalSep, thousandSep, variables) {
     })
   );
 
+  // Step 1: variable substitution (unchanged)
   let s = input;
-  const MAX_PASSES = varNames.length + 1; // worst case: one var resolved per pass
+  const MAX_PASSES = varNames.length + 1;
   for (let pass = 0; pass < MAX_PASSES; pass++) {
     let changed = false;
     for (const name of varNames) {
       const prev = s;
       s = s.replace(regexes[name], () => { changed = true; return `(${variables[name]})`; });
-      // Circular reference check: if the substituted value re-introduces the same name
-      // we just replaced, we have a cycle. Check by seeing if the name appears in its
-      // own (transitively expanded) value.
       if (changed && s !== prev) {
-        // Quick cycle probe: run just this one name's regex against the new string again
         const testRx = new RegExp(regexes[name].source, regexes[name].flags);
         if (testRx.test(s)) {
           const err = new Error(`Circular reference: "${name}" refers to itself`);
@@ -2042,10 +2372,37 @@ function preprocess(input, decimalSep, thousandSep, variables) {
     }
   }
 
-  // Step 2: depth-aware separator normalisation on the full expanded formula.
-  // Runs only at depth 0 so that function-argument commas inside call parens
-  // are never touched.
-  return _depthAwareNormalise(s, decimalSep, thousandSep);
+  // Step 2: separator normalisation
+  const result = _depthAwareNormalise(s, decimalSep, thousandSep);
+
+  // Step 3: integer validation — evaluate each variable's fully-expanded,
+  // normalised value and confirm it resolves to a whole number.
+  if (sys === 'integer') {
+    for (const name of varNames) {
+      // Expand this variable's value through the same substitution + normalisation
+      // pipeline so any nested variable references are resolved first.
+      const expandedRaw = preprocess(
+        String(variables[name]), decimalSep, thousandSep, variables, null // null = skip integer check to avoid duplicate errors
+      );
+      let evaluated;
+      try {
+        // eslint-disable-next-line no-new-func
+        evaluated = Function('"use strict"; return (' + expandedRaw + ')')();
+      } catch {
+        // If it doesn't evaluate (e.g. it's a sub-expression), skip — the
+        // main formula evaluation will catch any real errors later.
+        continue;
+      }
+
+      if (typeof evaluated !== 'number' || !Number.isInteger(evaluated)) {
+        const err = new Error(`Variable "${name}" is not an integer`);
+        err.bypassable = false;
+        throw err;
+      }
+    }
+  }
+
+  return result;
 }
 
 // Normalise number-separator tokens in a string, tracking parenthesis depth.
@@ -2115,13 +2472,13 @@ const _sortedUnitAliases = Array.from(_unitAliasMap.keys())
   .sort((a, b) => b.length - a.length);
 
 const TOKEN = {
-  NUMBER:'NUMBER', IDENT:'IDENT', BANG:'BANG',
+  NUMBER:'NUMBER', IDENT:'IDENT', BANG:'BANG', DBANG:'DBANG',
   PLUS:'PLUS', MINUS:'MINUS', STAR:'STAR', SLASH:'SLASH',
   CARET:'CARET', PERCENT:'PERCENT', LPAREN:'LPAREN', RPAREN:'RPAREN',
   COMMA:'COMMA', UNIT:'UNIT', TO:'TO', EOF:'EOF',
 };
 
-function tokenize(input) {
+function tokenize(input, sys) {
   const tokens = [];
   let i = 0;
 
@@ -2188,7 +2545,7 @@ function tokenize(input) {
       while (i < input.length && /[a-zA-Z0-9_]/.test(input[i])) name += input[i++];
       const lower2 = name.toLowerCase();
       const builtinConsts = ['pi', 'e', 'phi', 'tau', 'n', 'v'];
-      const specialFunctions = ['repeat', 'repeatsum'];
+      const specialFunctions = ['repeat', 'repeatsum', 'd'];
       if (lower2 in FUNCTIONS || builtinConsts.includes(lower2) || specialFunctions.includes(lower2)) {
         tokens.push({ type: TOKEN.IDENT, value: lower2 });
       }
@@ -2197,6 +2554,7 @@ function tokenize(input) {
     }
 
     // ── Operators & punctuation ──────────────────────────────────────────────
+
     switch (input[i]) {
       case '+': tokens.push({ type: TOKEN.PLUS });    i++; break;
       case '-': tokens.push({ type: TOKEN.MINUS });   i++; break;
@@ -2204,7 +2562,15 @@ function tokenize(input) {
       case '/': tokens.push({ type: TOKEN.SLASH });   i++; break;
       case '^': tokens.push({ type: TOKEN.CARET });   i++; break;
       case '%': tokens.push({ type: TOKEN.PERCENT }); i++; break;
-      case '!': tokens.push({ type: TOKEN.BANG });    i++; break;
+      case '!': 
+        if (input[i + 1] === '!') {
+          tokens.push({ type: TOKEN.DBANG });
+          i += 2;
+        } else {
+          tokens.push({ type: TOKEN.BANG });
+          i++;
+        }
+        break;
       case '(': tokens.push({ type: TOKEN.LPAREN });  i++; break;
       case ')': tokens.push({ type: TOKEN.RPAREN });  i++; break;
       case ',': tokens.push({ type: TOKEN.COMMA });   i++; break;
@@ -2235,7 +2601,7 @@ function tokenize(input) {
 //   "(5+5) km to mi"   →  same, explicit grouping
 //   "5 + (5 km to mi)" →  5 + 3.106...               = 8.106...  (parens override)
 
-function createParser(tokens, trigMode) {
+function createParser(tokens, trigMode, sys) {
   let pos = 0;
   const peek    = () => tokens[pos];
   const consume = () => tokens[pos++];
@@ -2247,11 +2613,12 @@ function createParser(tokens, trigMode) {
 
   // Top-level entry: additive result optionally followed by "UNIT to UNIT"
   function parseExpr() {
-    const value = parseAdditive();
+    const value = parseAdditive(sys);
 
     // Unit conversion: UNIT TO UNIT
     // Both the from-unit and to-unit tokens must be present for conversion to trigger.
     if (peek().type === TOKEN.UNIT) {
+      if (sys == 'integer') {throw new Error('Unit conversions not available with integer calculation')};
       const fromAlias = consume().value;
       if (peek().type === TOKEN.TO) {
         consume(); // eat 'to'
@@ -2274,58 +2641,88 @@ function createParser(tokens, trigMode) {
     return value;
   }
 
-  function parseAdditive() {
-    let left = parseMultiplicative();
+  function parseAdditive(sys) {
+    let left = parseMultiplicative(sys);
     while (peek().type === TOKEN.PLUS || peek().type === TOKEN.MINUS) {
-      const op = consume().type, right = parseMultiplicative();
-      left = op === TOKEN.PLUS ? left.plus(right) : left.minus(right);
+      const op = consume().type, right = parseMultiplicative(sys);
+      if (sys == 'integer') {left = op === TOKEN.PLUS ? left + right : left - right;}
+      else {left = op === TOKEN.PLUS ? left.plus(right) : left.minus(right)};
     }
     return left;
   }
 
-  function parseMultiplicative() {
-    let left = parseFactorial();
+  function parseMultiplicative(sys) {
+    let left = parseDoubleFactorial();
     while (peek().type===TOKEN.STAR || peek().type===TOKEN.SLASH || peek().type===TOKEN.PERCENT) {
-      const op = consume().type, right = parseFactorial();
-      if (op===TOKEN.STAR)       left = left.multipliedBy(right);
-      else if (op===TOKEN.SLASH) { if (right.isZero()) throw new Error('Division by zero'); left = left.dividedBy(right); }
-      else                       left = left.modulo(right);
+      const op = consume().type, right = parseFactorial(sys);
+      if (sys == 'integer') {
+        if (op===TOKEN.STAR)       left = left * right;
+        else if (op===TOKEN.SLASH) { if (right == 0) throw new Error('Division by zero'); left = left / right; }
+        else                       left = left % right;
+      }
+      else {
+        if (op===TOKEN.STAR)       left = left.multipliedBy(right);
+        else if (op===TOKEN.SLASH) { if (right.isZero()) throw new Error('Division by zero'); left = left.dividedBy(right); }
+        else                       left = left.modulo(right);
+      };
     }
     return left;
   }
 
-  function parseFactorial() {
-    let val = parsePower();
-    while (peek().type === TOKEN.BANG) { consume(); val = factorial(val); }
+  function parseDoubleFactorial() {
+    let val = parseFactorial(sys);
+    if (peek().type === TOKEN.DBANG) { consume(); val = doubleFactorial(val, sys); }
     return val;
   }
 
-  function parsePower() {
-    const base = parseUnary();
-    if (peek().type === TOKEN.CARET) {
-      consume();
-      const exponent = parseUnary();
-      const exp = exponent.toNumber();
-      if (Math.abs(exp) > 1000 && !BYPASS_LIMITS) {
-        const err = new Error('Power exponent > 1000 (safety limit)');
-        err.bypassable = true;
-        throw err;
+  function parseFactorial(sys) {
+    let val = parsePower(sys);
+    if (peek().type === TOKEN.BANG) { consume(); val = factorial(val, sys); }
+    return val;
+  }
+
+  function parsePower(sys) {
+    const base = parseUnary(sys);
+    if (sys == 'integer') {
+      if (peek().type === TOKEN.CARET) {
+        consume();
+        const exp = parseUnary(sys);
+        if ((exp > 100000n || exp < -100000n) && !BYPASS_LIMITS) {
+          const err = new Error('Power exponent > 100000 (safety limit)');
+          err.bypassable = true;
+          throw err;
+        }
+        return base ** exp;
       }
-      return _power(base, exponent);
     }
+    else {
+      if (peek().type === TOKEN.CARET) {
+        consume();
+        const exponent = parseUnary(sys);
+        const exp = exponent.toNumber();
+        if (Math.abs(exp) > 100000 && !BYPASS_LIMITS) {
+          const err = new Error('Power exponent > 100000 (safety limit)');
+          err.bypassable = true;
+          throw err;
+        }
+        return _power(base, exponent);
+      }
+    };
     return base;
   }
 
-  function parseUnary() {
-    if (peek().type === TOKEN.MINUS) { consume(); return parseUnary().negated(); }
-    if (peek().type === TOKEN.PLUS)  { consume(); return parseUnary(); }
-    return parsePrimary();
+  function parseUnary(sys) {
+    if (sys == 'integer') {if (peek().type === TOKEN.MINUS) { consume(); return parseUnary(sys) * -1n}}
+    else {if (peek().type === TOKEN.MINUS) { consume(); return parseUnary(sys).negated()}};
+    if (peek().type === TOKEN.PLUS)  { consume(); return parseUnary(sys); }
+    return parsePrimary(sys);
   }
 
-  function parsePrimary() {
+  function parsePrimary(sys) {
     const t = peek();
 
-    if (t.type === TOKEN.NUMBER) { consume(); return new BigNumber(t.value); }
+    if (sys == 'integer') {if (t.type === TOKEN.NUMBER) { consume(); return BigInt(t.value)}}
+    else {if (t.type === TOKEN.NUMBER) { consume(); return new BigNumber(t.value)}};
 
     if (t.type === TOKEN.IDENT) {
       consume();
@@ -2333,13 +2730,72 @@ function createParser(tokens, trigMode) {
       if (peek().type === TOKEN.LPAREN) {
         consume();
         
+        // Special handling for d(expr [, precision]) - returns decimal part of expr,
+        // optionally re-evaluated at a custom precision level.
+        if (name === 'd') {
+          if (sys == 'integer') {
+            throw new Error('d() is not valid with integer calculation');
+          }
+          else {
+            // Collect inner expression tokens (depth-aware, stop at first top-level comma or ')')
+            const exprTokens = [];
+            let parenDepth = 0;
+            while (true) {
+              const tok = peek();
+              if (tok.type === TOKEN.EOF) throw new Error('Unexpected end in d()');
+              if ((tok.type === TOKEN.COMMA || tok.type === TOKEN.RPAREN) && parenDepth === 0) break;
+              if (tok.type === TOKEN.LPAREN) parenDepth++;
+              if (tok.type === TOKEN.RPAREN) parenDepth--;
+              exprTokens.push(consume());
+            }
+
+            // Optional second argument: custom precision
+            let customPrecision = null;
+            if (peek().type === TOKEN.COMMA) {
+              consume(); // eat ','
+              const precVal = parseExpr();
+              customPrecision = precVal.toNumber();
+              if (!Number.isInteger(customPrecision) || customPrecision < 1) {
+                throw new Error('d() precision argument must be a positive integer');
+              }
+              if (customPrecision > 1000 && !BYPASS_LIMITS) {
+                const err = new Error('d() precision > 1000 (safety limit)');
+                err.bypassable = true;
+                throw err;
+              }
+            }
+            expect(TOKEN.RPAREN);
+
+            // Evaluate the inner expression, temporarily overriding precision if requested
+            let innerVal;
+            if (customPrecision !== null) {
+              const savedPrecision = PRECISION;
+              _setPrecision(customPrecision);
+              try {
+                const subTokens = [...exprTokens, { type: TOKEN.EOF }];
+                const subParser = createParser(subTokens, trigMode, sys);
+                innerVal = subParser.parseExpr();
+              } finally {
+                _setPrecision(savedPrecision);
+              }
+            } else {
+              const subTokens = [...exprTokens, { type: TOKEN.EOF }];
+              const subParser = createParser(subTokens, trigMode, sys);
+              innerVal = subParser.parseExpr();
+            }
+
+            const decPart = innerVal.minus(innerVal.integerValue(BigNumber.ROUND_DOWN));
+            return customPrecision !== null
+              ? decPart.decimalPlaces(customPrecision, BigNumber.ROUND_DOWN)
+              : decPart;
+          }
+        }
+
         // Special handling for repeatSum(expr, count) - sums expr evaluated with n=1,2,3,...
         if (name === 'repeatsum') {
-          // Store tokens for the first argument
           const exprTokens = [];
           let parenDepth = 0;
           
-          // Collect tokens until we hit the first comma (at depth 0)
           while (true) {
             const tok = peek();
             if (tok.type === TOKEN.EOF) throw new Error('Unexpected end in repeatSum()');
@@ -2353,7 +2809,7 @@ function createParser(tokens, trigMode) {
           const countVal = parseExpr();
           expect(TOKEN.RPAREN);
           
-          const count = countVal.toNumber();
+          const count = sys === 'integer' ? Number(countVal) : countVal.toNumber();
           if (!Number.isInteger(count) || count < 1) throw new Error('repeatSum() count must be a positive integer');
           if (count > 1000 && !BYPASS_LIMITS) {
             const err = new Error('repeatSum() count > 1000 (safety limit)');
@@ -2361,15 +2817,13 @@ function createParser(tokens, trigMode) {
             throw err;
           }
           
-          // Evaluate the expression once for each n value and sum the results
-          let result = new BigNumber(0);
+          let result = sys === 'integer' ? 0n : new BigNumber(0);
           for (let i = 1; i <= count; i++) {
-            _repeatN = new BigNumber(i);
-            // Create a new parser with the stored tokens
+            _repeatN = sys === 'integer' ? BigInt(i) : new BigNumber(i);
             const subTokens = [...exprTokens, { type: TOKEN.EOF }];
-            const subParser = createParser(subTokens, trigMode);
+            const subParser = createParser(subTokens, trigMode, sys);
             const iterResult = subParser.parseExpr();
-            result = result.plus(iterResult);
+            result = sys === 'integer' ? result + iterResult : result.plus(iterResult);
           }
           _repeatN = null;
           return result;
@@ -2377,11 +2831,9 @@ function createParser(tokens, trigMode) {
         
         // Special handling for repeat(expr, count, startValue) - iterative with n and v
         if (name === 'repeat') {
-          // Store tokens for the first argument (expression)
           const exprTokens = [];
           let parenDepth = 0;
           
-          // Collect tokens until we hit the first comma (at depth 0)
           while (true) {
             const tok = peek();
             if (tok.type === TOKEN.EOF) throw new Error('Unexpected end in repeat()');
@@ -2397,7 +2849,7 @@ function createParser(tokens, trigMode) {
           const startVal = parseExpr();
           expect(TOKEN.RPAREN);
           
-          const count = countVal.toNumber();
+          const count = sys === 'integer' ? Number(countVal) : countVal.toNumber();
           if (!Number.isInteger(count) || count < 1) throw new Error('repeat() count must be a positive integer');
           if (count > 1000 && !BYPASS_LIMITS) {
             const err = new Error('repeat() count > 1000 (safety limit)');
@@ -2405,13 +2857,11 @@ function createParser(tokens, trigMode) {
             throw err;
           }
           
-          // Iterate: evaluate expression with n (iteration) and v (previous value)
           _repeatV = startVal;
           for (let i = 1; i <= count; i++) {
-            _repeatN = new BigNumber(i);
-            // Create a new parser with the stored tokens
+            _repeatN = sys === 'integer' ? BigInt(i) : new BigNumber(i);
             const subTokens = [...exprTokens, { type: TOKEN.EOF }];
-            const subParser = createParser(subTokens, trigMode);
+            const subParser = createParser(subTokens, trigMode, sys);
             const iterResult = subParser.parseExpr();
             _repeatV = iterResult;
           }
@@ -2430,17 +2880,27 @@ function createParser(tokens, trigMode) {
         expect(TOKEN.RPAREN);
         const fn = FUNCTIONS[name];
         if (!fn) throw new Error(`Unknown function: ${name}()`);
-        return fn(args, trigMode);
+        return fn(sys, args, trigMode);
       }
       
       // Built-in constants (recalculated dynamically when PRECISION changes)
-      if (name === 'pi')  return new BigNumber(_getPI().toString());
-      if (name === 'e')   return new BigNumber(_exp(new BigNumber(1)).toString());
+      if (name === 'pi') {
+        if (sys === 'integer') {throw new Error('"pi" not available with integer calculation')};
+        return new BigNumber(_getPI().toString());
+      }
+      if (name === 'e') {
+        if (sys === 'integer') {throw new Error('"e" not available with integer calculation')};
+        return new BigNumber(_exp(new BigNumber(1)).toString());
+      }
       if (name === 'phi') {
+        if (sys === 'integer') {throw new Error('"phi" not available with integer calculation')};
         const sqrt5 = new BigNumber(5).sqrt();
         return new BigNumber(1).plus(sqrt5).dividedBy(2);
       }
-      if (name === 'tau') return new BigNumber(_getPI().toString()).times(2);
+      if (name === 'tau') {
+        if (sys === 'integer') {throw new Error('"tau" not available with integer calculation')};
+        return new BigNumber(_getPI().toString()).times(2);
+      }
       
       // Repeat function context variables
       if (name === 'n') {
@@ -2474,15 +2934,18 @@ function createParser(tokens, trigMode) {
 function createCalculator() {
   const variables = Object.assign(window.settings.getVariables(), _defaultVariables);
 
-  function setVariable(name, value) {
+  function setVariable(name, value, calc = 'false') {
     const key = name.toLowerCase().trim();
     if (!key) return {text:'Variable name cannot be empty',button:'none'};
     if (key in FUNCTIONS) return {text:`"${key}" is a reserved function name`,button:'none'};
     const builtinConsts = ['pi', 'e', 'phi', 'tau', 'n', 'v'];
     if (builtinConsts.includes(key)) return {text:`"${key}" is a reserved constant`,button:'none'};
+    const builtinCalcs = ['calc1', 'calc2', 'calc3', 'calc4', 'calc5', 'calc6'];
+    if (builtinCalcs.includes(key) && calc !== true) return {text:`"${key}" is a reserved variable name`,button:'none'};
     if (!/^[a-z_][a-z0-9_]*$/.test(key)) return {text:`Invalid variable name: "${key}"`,button:'none'};
     // Value can be a number, BigNumber, or any expression string (e.g. "pi/5", "2^10+1")
-    variables[key] = BigNumber.isBigNumber(value) ? value.toString() : String(value);
+    if (calc == true && window.settings.getCalcSys() == 'integer') {variables[key] = BigInt(value.toString())}
+    else {variables[key] = BigNumber.isBigNumber(value) ? value.toString() : String(value)};
   }
 
   function removeVariable(name) {
@@ -2497,17 +2960,19 @@ function createCalculator() {
 
   function calculate(formula, options = {}) {
     try {
+      const calcSys = window.settings.getCalcSys();
       // Check precision limit before any calculation
-      if (PRECISION > 10000 && !BYPASS_LIMITS) {
+      if (PRECISION > 10000 && !BYPASS_LIMITS && calcSys == 'decimal') {
         return { 
-          result: '', 
-          full: '', 
+          result: '',
+          full: '',
+          fullnonformatted: '',
           error: { text: 'Precision > 10000 (safety limit)', button: 'bypass' } 
         };
       }
 
       if (typeof formula !== 'string' || formula.trim() === '') {
-        return { result: '', full: '', error: { text: 'Empty formula', button: 'none' } };
+        return { result: '', full: '', fullnonformatted: '', error: { text: 'Empty formula', button: 'none' } };
       }
 
       const {
@@ -2517,35 +2982,56 @@ function createCalculator() {
       } = options;
 
       if (decimalSep !== null && decimalSep === thousandSep) {
-        return { result: '', full: '', error: { text: 'Separators cannot match', button: 'none' } };
+        return { result: '', full: '', fullnonformatted: '', error: { text: 'Separators cannot match', button: 'none' } };
       }
 
-      const cleaned = preprocess(formula.trim(), decimalSep, thousandSep, variables);
-      const tokens  = tokenize(cleaned);
-      const parser  = createParser(tokens, trigMode);
+      const cleaned = preprocess(formula.trim(), decimalSep, thousandSep, variables, calcSys);
+      const tokens  = tokenize(cleaned, calcSys);
+      const parser  = createParser(tokens, trigMode, calcSys);
       const value   = parser.parseExpr();
 
       if (parser.peek().type !== TOKEN.EOF) {
-        return { result: '', full: '', error: { text: 'Unexpected token after expression', button: 'none' } };
+        return { result: '', full: '', fullnonformatted: '', error: { text: 'Unexpected token after expression', button: 'none' } };
       }
-      if (!BigNumber.isBigNumber(value) || !value.isFinite()) {
-        return { result: '', full: '', error: { text: 'Non-finite result', button: 'none' } };
+      if (calcSys == 'decimal') {
+        if (!BigNumber.isBigNumber(value) || !value.isFinite()) {
+          return { result: '', full: '', fullnonformatted: '', error: { text: 'Non-finite result', button: 'none' } };
+        }
+        const rounded = value.decimalPlaces(PRECISION, BigNumber.ROUND_DOWN);
+        return {
+          result: rounded.toExponential(),
+          full:   rounded.toFormat(fmt),
+          fullnonformatted:   rounded.toFormat(fmtnonformatted),
+          error:  null,
+        }
       }
-
-      // Round to PRECISION decimal places for clean output
-      const rounded = value.decimalPlaces(PRECISION, BigNumber.ROUND_DOWN);
-
-      return {
-        result: rounded.toExponential(),
-        full:   rounded.toFormat(fmt),
-        error:  null,
-      };
+      else {
+        if (fmt.groupSeparator.length == 0) {
+          return {
+            result: bigIntToSciNotation(value),
+            full:   value.toString(),
+            fullnonformatted:   value.toString(),
+            error:  null,
+          }
+        }
+        else {
+          return {
+            result: bigIntToSciNotation(value),
+            full:   formatBigInt(value, fmt),
+            fullnonformatted:   formatBigInt(value, fmtnonformatted),
+            error:  null,
+          }
+        }
+        
+      }
+      
     } catch (err) {
       // Catch and format error
       const isBypassable = err.bypassable === true;
       return {
         result: '',
         full:   '',
+        fullnonformatted: '',
         error: {
           text:   err.message || 'Unknown error',
           button: isBypassable ? 'bypass' : 'none',
@@ -2600,6 +3086,44 @@ function addUnitCategory(category) {
   }
 }
 
+function formatBigInt(n, format) {
+  if (format.groupSeparator == '') {return n.toString()};
+  const sep = format.groupSeparator;
+  const sign = n < 0n ? '-' : '';
+  const str = (n < 0n ? -n : n).toString();
+
+  const len = str.length;
+  const firstGroupSize = len % 3 || 3;
+  const partCount = Math.ceil(len / 3);
+  const parts = new Array(partCount);
+
+  parts[0] = str.slice(0, firstGroupSize);
+  for (let i = 1; i < partCount; i++) {
+    parts[i] = str.slice(firstGroupSize + (i - 1) * 3, firstGroupSize + i * 3);
+  }
+
+  return sign + parts.join(sep);
+}
+
+function bigIntToSciNotation(n) {
+  if (n === 0n) return '0e+0';
+
+  const sign = n < 0n ? '-' : '';
+  const str = (n < 0n ? -n : n).toString();
+
+  // Find last non-zero digit
+  let lastNonZero = str.length - 1;
+  while (lastNonZero > 0 && str[lastNonZero] === '0') lastNonZero--;
+
+  const exponent = str.length - 1;
+  const significand = lastNonZero === 0
+    ? str[0]
+    : str[0] + '.' + str.slice(1, lastNonZero + 1);
+
+  const expSign = exponent >= 0 ? '+' : '-';
+  return `${sign}${significand}e${expSign}${Math.abs(exponent)}`;
+}
+
 // =======================================================================================================
 // =======================================================================================================
 
@@ -2617,29 +3141,29 @@ setTimeout(function() {document.getElementById('loader').remove();calc1Formula.f
 
 setInterval(() => {
   const t = Date.now();
-  const lastH = window.calchistory.get(0) || {formula:"", fullresult:"", result:"", calc:"calc1", precision:PRECISION, time:0, date:Date.now(), version:currentVersion};
-  if ((t-calc1LastCalc.date) >= 3000 && calc1LastCalc.logged == false && !(calc1LastCalc.result == "ERROR") && calc1LastCalc.formula.length > 0 && calc1LastCalc.fullresult.length > 0 && !(calc1LastCalc.formula == lastH.formula && calc1LastCalc.fullresult == lastH.fullresult)) {
-    window.calchistory.add(calc1LastCalc.formula, calc1LastCalc.fullresult, calc1LastCalc.result, calc1LastCalc.calc, calc1LastCalc.precision, calc1LastCalc.time, calc1LastCalc.date, calc1LastCalc.version);
+  const lastH = window.calchistory.get(0) || {formula:"", fullresult:"", result:"", calc:"calc1", precision:PRECISION, time:0, date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys()};
+  if ((t-calc1LastCalc.date) >= 2000 && calc1LastCalc.logged == false && !(calc1LastCalc.result == "ERROR") && calc1LastCalc.formula.length > 0 && calc1LastCalc.fullresult.length > 0 && !(calc1LastCalc.formula == lastH.formula && calc1LastCalc.fullresult == lastH.fullresult && calc1LastCalc.calc == lastH.calc && calc1LastCalc.sys == lastH.sys)) {
+    window.calchistory.add(calc1LastCalc.formula, calc1LastCalc.fullresult, calc1LastCalc.result, calc1LastCalc.calc, calc1LastCalc.precision, calc1LastCalc.time, calc1LastCalc.date, calc1LastCalc.version, calc1LastCalc.sys);
     calc1LastCalc.logged = true;
   }
-  if ((t-calc2LastCalc.date) >= 3000 && calc2LastCalc.logged == false && !(calc2LastCalc.result == "ERROR") && calc2LastCalc.formula.length > 0 && calc2LastCalc.fullresult.length > 0 && !(calc2LastCalc.formula == lastH.formula && calc2LastCalc.fullresult == lastH.fullresult)) {
-    window.calchistory.add(calc2LastCalc.formula, calc2LastCalc.fullresult, calc2LastCalc.result, calc2LastCalc.calc, calc2LastCalc.precision, calc2LastCalc.time, calc2LastCalc.date, calc2LastCalc.version);
+  if ((t-calc2LastCalc.date) >= 2000 && calc2LastCalc.logged == false && !(calc2LastCalc.result == "ERROR") && calc2LastCalc.formula.length > 0 && calc2LastCalc.fullresult.length > 0 && !(calc2LastCalc.formula == lastH.formula && calc2LastCalc.fullresult == lastH.fullresult && calc2LastCalc.calc == lastH.calc && calc2LastCalc.sys == lastH.sys)) {
+    window.calchistory.add(calc2LastCalc.formula, calc2LastCalc.fullresult, calc2LastCalc.result, calc2LastCalc.calc, calc2LastCalc.precision, calc2LastCalc.time, calc2LastCalc.date, calc2LastCalc.version, calc1LastCalc.sys);
     calc2LastCalc.logged = true;
   }
-  if ((t-calc3LastCalc.date) >= 3000 && calc3LastCalc.logged == false && !(calc3LastCalc.result == "ERROR") && calc3LastCalc.formula.length > 0 && calc3LastCalc.fullresult.length > 0 && !(calc3LastCalc.formula == lastH.formula && calc3LastCalc.fullresult == lastH.fullresult)) {
-    window.calchistory.add(calc3LastCalc.formula, calc3LastCalc.fullresult, calc3LastCalc.result, calc3LastCalc.calc, calc3LastCalc.precision, calc3LastCalc.time, calc3LastCalc.date, calc3LastCalc.version);
+  if ((t-calc3LastCalc.date) >= 2000 && calc3LastCalc.logged == false && !(calc3LastCalc.result == "ERROR") && calc3LastCalc.formula.length > 0 && calc3LastCalc.fullresult.length > 0 && !(calc3LastCalc.formula == lastH.formula && calc3LastCalc.fullresult == lastH.fullresult && calc3LastCalc.calc == lastH.calc && calc3LastCalc.sys == lastH.sys)) {
+    window.calchistory.add(calc3LastCalc.formula, calc3LastCalc.fullresult, calc3LastCalc.result, calc3LastCalc.calc, calc3LastCalc.precision, calc3LastCalc.time, calc3LastCalc.date, calc3LastCalc.version, calc1LastCalc.sys);
     calc3LastCalc.logged = true;
   }
-  if ((t-calc4LastCalc.date) >= 3000 && calc4LastCalc.logged == false && !(calc4LastCalc.result == "ERROR") && calc4LastCalc.formula.length > 0 && calc4LastCalc.fullresult.length > 0 && !(calc4LastCalc.formula == lastH.formula && calc4LastCalc.fullresult == lastH.fullresult)) {
-    window.calchistory.add(calc4LastCalc.formula, calc4LastCalc.fullresult, calc4LastCalc.result, calc4LastCalc.calc, calc4LastCalc.precision, calc4LastCalc.time, calc4LastCalc.date, calc4LastCalc.version);
+  if ((t-calc4LastCalc.date) >= 2000 && calc4LastCalc.logged == false && !(calc4LastCalc.result == "ERROR") && calc4LastCalc.formula.length > 0 && calc4LastCalc.fullresult.length > 0 && !(calc4LastCalc.formula == lastH.formula && calc4LastCalc.fullresult == lastH.fullresult && calc4LastCalc.calc == lastH.calc && calc4LastCalc.sys == lastH.sys)) {
+    window.calchistory.add(calc4LastCalc.formula, calc4LastCalc.fullresult, calc4LastCalc.result, calc4LastCalc.calc, calc4LastCalc.precision, calc4LastCalc.time, calc4LastCalc.date, calc4LastCalc.version, calc1LastCalc.sys);
     calc4LastCalc.logged = true;
   }
-  if ((t-calc5LastCalc.date) >= 3000 && calc5LastCalc.logged == false && !(calc5LastCalc.result == "ERROR") && calc5LastCalc.formula.length > 0 && calc5LastCalc.fullresult.length > 0 && !(calc5LastCalc.formula == lastH.formula && calc5LastCalc.fullresult == lastH.fullresult)) {
-    window.calchistory.add(calc5LastCalc.formula, calc5LastCalc.fullresult, calc5LastCalc.result, calc5LastCalc.calc, calc5LastCalc.precision, calc5LastCalc.time, calc5LastCalc.date, calc5LastCalc.version);
+  if ((t-calc5LastCalc.date) >= 2000 && calc5LastCalc.logged == false && !(calc5LastCalc.result == "ERROR") && calc5LastCalc.formula.length > 0 && calc5LastCalc.fullresult.length > 0 && !(calc5LastCalc.formula == lastH.formula && calc5LastCalc.fullresult == lastH.fullresult && calc5LastCalc.calc == lastH.calc && calc5LastCalc.sys == lastH.sys)) {
+    window.calchistory.add(calc5LastCalc.formula, calc5LastCalc.fullresult, calc5LastCalc.result, calc5LastCalc.calc, calc5LastCalc.precision, calc5LastCalc.time, calc5LastCalc.date, calc5LastCalc.version, calc1LastCalc.sys);
     calc5LastCalc.logged = true;
   }
-  if ((t-calc6LastCalc.date) >= 3000 && calc6LastCalc.logged == false && !(calc6LastCalc.result == "ERROR") && calc6LastCalc.formula.length > 0 && calc6LastCalc.fullresult.length > 0 && !(calc6LastCalc.formula == lastH.formula && calc6LastCalc.fullresult == lastH.fullresult)) {
-    window.calchistory.add(calc6LastCalc.formula, calc6LastCalc.fullresult, calc6LastCalc.result, calc6LastCalc.calc, calc6LastCalc.precision, calc6LastCalc.time, calc6LastCalc.date, calc6LastCalc.version);
+  if ((t-calc6LastCalc.date) >= 2000 && calc6LastCalc.logged == false && !(calc6LastCalc.result == "ERROR") && calc6LastCalc.formula.length > 0 && calc6LastCalc.fullresult.length > 0 && !(calc6LastCalc.formula == lastH.formula && calc6LastCalc.fullresult == lastH.fullresult && calc6LastCalc.calc == lastH.calc && calc6LastCalc.sys == lastH.sys)) {
+    window.calchistory.add(calc6LastCalc.formula, calc6LastCalc.fullresult, calc6LastCalc.result, calc6LastCalc.calc, calc6LastCalc.precision, calc6LastCalc.time, calc6LastCalc.date, calc6LastCalc.version, calc1LastCalc.sys);
     calc6LastCalc.logged = true;
   }
 }, 500);

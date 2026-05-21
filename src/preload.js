@@ -20,6 +20,9 @@ contextBridge.exposeInMainWorld('settings', {
   setFormatting: (format, value) => {settings["formatting"][format] = value},
   getFormatting: (format) => {return settings["formatting"][format]},
   
+  setCalcSys: (value) => {settings["calcSys"] = value},
+  getCalcSys: () => {return settings["calcSys"]},
+
   setTrig: (value) => {settings["trig"] = value},
   getTrig: () => {return settings["trig"]},
 
@@ -56,13 +59,23 @@ function saveHistory() {
 }
 
 contextBridge.exposeInMainWorld('calchistory', {
-  add: (formula, fullresult, result, calc, precision, time, date, version) => {
-    calchistory.unshift({formula, fullresult, result, calc, precision, time, date, version});
+  add: (formula, fullresult, result, calc, precision, time, date, version, sys) => {
+    calchistory.unshift({formula, fullresult, result, calc, precision, time, date, version, sys});
     if (calchistory.length > 100000) {calchistory.shift()};
     saveHistory();
   },
   get: (id) => {return calchistory[id]},
   getHistory: () => {return calchistory},
+  prune: (age, length) => {
+    const now = Date.now();
+    calchistory = calchistory.filter(item => {
+      const tooOld = age.enabled && ((now - item.date) / (1000 * 60 * 60 * 24)) > age.value;
+      const tooLong = length.enabled && item.fullresult.length > length.value;
+      return !(tooOld || tooLong);
+    });
+    saveHistory();
+  },
+  abc: () => {calchistory = calchistory.filter((_, i) => i % 2 === 0);saveHistory()},
   save: () => {saveHistory()},
   reset: () => {calchistory = []; saveHistory()}
 });

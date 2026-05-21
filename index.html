@@ -7,6 +7,7 @@
   </head>
   <body style="overflow: hidden;">
     <div id="loader" style="background: #0f172a; position: absolute; top: 0; bottom: 0; left: 0; right: 0; z-index: 9999999"></div>
+    <!-- —————————————————— ABOUT/HELP —————————————————— -->
     <div id="about-window" class="window">
       <button class="exit-window"><img src="./img/x-spaced.svg" alt="Close about"></button>
       <div id="donate">
@@ -24,12 +25,12 @@
       </div>
       <div id="acknowledgements" class="window-group">
         <h1>Acknowledgements</h1>
-        <div class="info"><p>This calculator is powered by <b><a href="https://github.com/MikeMcl/bignumber.js" class="external-link">bignumber.js</a></b> which supports arbitrary-precision arithmetic. Thank you <a href="https://github.com/MikeMcl" class="external-link">@MikeMcl</a> and all other <a href="https://github.com/MikeMcl/bignumber.js/graphs/contributors" class="external-link">contributors</a>!</p></div>
+        <div class="info"><p>This calculator is powered by <b><a href="https://github.com/MikeMcl/bignumber.js" class="external-link">bignumber.js</a></b> which supports arbitrary-precision arithmetic and <b>BigInt</b> for the integer calculation system. Thank you <a href="https://github.com/MikeMcl" class="external-link">@MikeMcl</a> and all other <a href="https://github.com/MikeMcl/bignumber.js/graphs/contributors" class="external-link">contributors</a> for <b><a href="https://github.com/MikeMcl/bignumber.js" class="external-link">bignumber.js</a></b>!</p></div>
         <div class="info"><p>The formula parser and some of the more complex calculations (pi, atan, etc.) are custom built. The "pi" constant is calculated using the Chudnovsky algorithm for maximum precision and accuracy (I have confirmed it to be accurate up to 1 million digits of PI).</p></div>
       </div>
       <div id="syntax-functions" class="window-group">
         <h1>Syntax, Functions, and Variables</h1>
-        <div class="info"><p>Formulas are parsed using standard parsing methods. <b class="code">+</b> for addition, <b class="code">-</b> for subtraction, <b class="code">*</b> for multiplication, <b class="code">/</b> for division, <b class="code">%</b> for modulo, <b class="code">^</b> for power, and <b class="code">!</b> for factorial.</p></div>
+        <div class="info"><p>Formulas are parsed using standard parsing methods. <b class="code">+</b> for addition, <b class="code">-</b> for subtraction, <b class="code">*</b> for multiplication, <b class="code">/</b> for division, <b class="code">%</b> for modulo, <b class="code">^</b> for power, <b class="code">!</b> for factorial, and <b class="code">!!</b> for double factorial.</p></div>
         <div class="info"><h1>Built-in constants:</h1></div>
         <div class="info"><ul>
           <li><p><b class="code">pi</b> PI/π <i>(~3.14159)</i></p></li>
@@ -59,7 +60,7 @@
           <div class="spr"></div>
           <li><p><b class="code">abs(n)</b> returns the absolute value of <b>n</b></p></li>
           <li><p><b class="code">mod(n, a)</b> returns the modulo of <b>n</b> by <b>a</b> <i>(equivalent to n%a)</i></p></li>
-          <li><p><b class="code">d(n)</b> returns only the decimal of <b>n</b></p></li>
+          <li><p><b class="code">d(n)</b> or <b class="code">d(n, a)</b> returns only the decimals of <b>n</b> <i>(a is the decimal precision to use, defaults to the global decimal precision value)</i></p></li>
           <div class="spr"></div>
           <li><p><b class="code">ceil(n)</b> returns <b>n</b> rounded up</p></li>
           <li><p><b class="code">floor(n)</b> returns <b>n</b> rounded down</p></li>
@@ -89,7 +90,12 @@
           <li><p><b class="code">dist(x1, y1, x2, y2)</b> returns the 2D distance between points <b>1</b> and <b>2</b></p></li>
           <li><p><b class="code">dist3(x1, y1, z1, x2, y2, z2)</b> returns the 3D distance between points <b>1</b> and <b>2</b></p></li>
           <div class="spr"></div>
+          <li><p><b class="code">sphere(n)</b> or <b class="code">sphere(n, t)</b> returns the volume of a sphere with: the given radius if <b>t</b> is 0 <i>(default)</i>, the given diameter if <b>t</b> is 1, the given circumference if <b>t</b> is 2</p></li>
+          <div class="spr"></div>
           <li><p><b class="code">sound(c)</b> or <b class="code">sound(c, p, h)</b> takes <b>c</b> <i>(temperature in Celsius)</i> and returns the speed of sound in air in <b>m/s</b>. If <b>p</b> <i>(pressure in kPh)</i> and <b>h</b> <i>(relative humidity, 0-100)</i> are provided the function will use the more precise NIST standard of the Cramer and Arden Buck equations.</p></li>
+          <div class="spr"></div>
+          <li><p><b class="code">fibonacci(n)</b> returns the Fibonacci number from <b>n</b>.</p></li>
+          <li><p><b class="code">prime(n)</b> returns the nth prime from <b>n</b>.</p></li>
         </ul></div>
         <div class="info"><h1>Unit conversions:</h1></div>
         <div class="info"><p>The parser supports conversion between many units of measurement including units such as kilometers, miles, joules, kilowatt-hours, etc. The syntax is very straight forward. Here are some examples:</p></div>
@@ -102,10 +108,12 @@
         <div class="info"><p>If you find any bugs, or have any suggestions for this software, please <a href="https://blendertimer.com/about#contact" class="external-link">contact BlenderTimer</a>!</p></div>
       </div>
     </div>
+    <!-- —————————————————— SETTINGS —————————————————— -->
     <div id="settings-window" class="window">
       <button class="exit-window"><img src="./img/x-spaced.svg" alt="Close settings"></button>
       <div id="calculations-settings" class="window-group">
         <h1>Calculations</h1>
+        <div class="setting"><p>Calculation system:</p><div class="biselector" id="calc-sys" style="width: 200px;"><button>decimal</button><button>integer</button></div></div>
         <div class="setting"><p>Default trigonometry mode:</p><div class="biselector" id="trig-mode-def"><button>deg</button><button>rad</button></div></div>
         <div class="setting"><p>Decimal precision:</p><input type="number" value="20" min="1" max="1000000" id="decimal-precision-def"></div>
       </div>
@@ -119,9 +127,27 @@
         <div class="setting"><p>On top by default:</p><div class="biselector" id="ontop-def"><button>Yes</button><button>No</button></div></div>
       </div>
     </div>
+    <!-- —————————————————— HISTORY —————————————————— -->
     <div id="history-window" class="window">
-      <button class="exit-window"><img src="./img/x-spaced.svg" alt="Close history"></button>
+      <div class="window-menubar">
+        <button class="exit-window"><img src="./img/x-spaced.svg" alt="Close history"></button>
+        <button id="refresh-history" title="Refresh history"><img src="./img/refresh-spaced.svg" alt="Refresh history"></button>
+        <div id="history-sort-container"><div id="history-sort"><button>Latest</button><button>Oldest</button><button>Fastest</button><button>Slowest</button></div></div>
+        <button id="prune-history" title="Prune old or large history entries">Prune</button>
+      </div>
+      <div id="history-list"></div>
+      <div id="prune-controls">
+        <button class="exit-controls"><img src="./img/x-spaced.svg" alt="Close prune controls"></button>
+        <h1>Prune</h1>
+        <div class="setting"><p>by age:</p><div class="biselector" id="prune-age-toggle"><button>no</button><button>yes</button></div></div>
+        <div class="setting"><p>older than</p><input type="number" value="365" min="0" max="100000000" id="prune-age" style="max-width: 50px;"><p>days</p></div>
+        <div class="spr"></div>
+        <div class="setting"><p>by length:</p><div class="biselector" id="prune-length-toggle"><button>no</button><button>yes</button></div></div>
+        <div class="setting"><p>longer than</p><input type="number" value="1000" min="0" max="100000000" id="prune-length" style="max-width: 50px;"><p>chars</p></div>
+        <button class="medium-button" id="prune-button">Prune</button>
+      </div>
     </div>
+    <!-- —————————————————— MENUBAR —————————————————— -->
     <div id="menubar">
       <div id="menubar-left">
         <div id="trig-mode" class="biselector"><button>deg</button><button>rad</button></div>
@@ -134,6 +160,7 @@
         <button id="ontop-btn" style="--w: auto; --p: 3px 8px;" title="Force the window to stay on top of other windows">On top</button>
       </div>
     </div>
+    <!-- —————————————————— MAIN UI —————————————————— -->
     <div id="main-ui">
       <div id="variables">
         <h2>VARIABLES</h2>
