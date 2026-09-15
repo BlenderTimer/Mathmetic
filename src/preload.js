@@ -5,7 +5,7 @@ import defaultSettings from "/src/settings.js";
 contextBridge.exposeInMainWorld('appInfo', {getInfo: () => ipcRenderer.invoke('get-app-info')});
 contextBridge.exposeInMainWorld('electron', {openExternal: (url) => shell.openExternal(url)});
 
-// ============================== Settings ==============================
+// —————————— Settings ——————————
 let settings = defaultSettings;
 
 ipcRenderer.invoke("settings:load").then(stored => {
@@ -47,7 +47,7 @@ contextBridge.exposeInMainWorld('settings', {
   reset: () => {settings = defaultSettings; saveSettings()}
 });
 
-// ============================== History ==============================
+// —————————— History ——————————
 let calchistory = [];
 
 ipcRenderer.invoke("calchistory:load").then(stored => {
@@ -80,13 +80,12 @@ contextBridge.exposeInMainWorld('calchistory', {
   reset: () => {calchistory = []; saveHistory()}
 });
 
-// ============================== mainWindow ==============================
-
+// —————————— mainWindow ——————————
 contextBridge.exposeInMainWorld('mainWindow', {
   setAlwaysOnTop: (ontop) => {ipcRenderer.send("mainWindow:ontop", ontop);}
 });
 
-// ============================== Device Data ==============================
+// —————————— Device Data ——————————
 const os = require("os");
 contextBridge.exposeInMainWorld('deviceData', {
   owner: getWindowsFullName()

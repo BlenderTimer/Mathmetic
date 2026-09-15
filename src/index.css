@@ -1,3 +1,4 @@
+/* —————————— BASE STYLES —————————— */
 * {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   color: var(--txtcol);
@@ -5,24 +6,27 @@
   padding: 0px;
 }
 
+html, body {
+  background: var(--bgcol);
+}
+
+/* —————————— TEXT SELECTIONS —————————— */
 ::selection {
   background: var(--wincol-lighten);
 }
 
+/* —————————— SEPARATORS —————————— */
 .spr {
 	width: 90%;
 	height: 2px;
 	min-height: 2px;
 	max-height: 2px;
+	margin: 10px auto 10px auto;
 	background: #82b3ff24;
 	box-shadow: 0px 0px 10px #00000030;
-	margin: 10px auto 10px auto;
 }
 
-html, body {
-  background: var(--bgcol);
-}
-
+/* —————————— H2 (VARIABLES PANEL HEADER, ETC.) —————————— */
 h2 {
   display: block;
   font-size: 12pt;
@@ -34,6 +38,7 @@ h2 {
   user-select: none;
 }
 
+/* —————————— SMALL BUTTONS (VARIABLES PANEL, ETC.) —————————— */
 .small-button {
   display: block;
   min-width: min(100px, 100%);
@@ -56,6 +61,7 @@ h2 {
   background: var(--pricol-hover);
 }
 
+/* —————————— MEDIUM BUTTONS (PRUNE CONTROLS, ETC.) —————————— */
 .medium-button {
   display: block;
   min-width: min(100px, 100%);
@@ -79,6 +85,7 @@ h2 {
   box-shadow: 0px 0px 10px var(--pricol);
 }
 
+/* —————————— SEPARATE WINDOWS/PAGES (HISTORY, SETTINGS, ABOUT, ETC.) —————————— */
 .window {
   display: none;
   position: absolute;
@@ -111,6 +118,7 @@ h2 {
   background: var(--wincol-lighter);
 }
 
+/* —————————— WINDOW MENUBARS —————————— */
 .window-menubar {
   display: flex;
   justify-content: space-between;
@@ -158,6 +166,7 @@ h2 {
   width: 100%;
 }
 
+/* —————————— WINDOW GROUPS/SECTIONS (APPLICATION INFORMATION, CONTRIBUTING, ETC.) —————————— */
 .window-group {
   display: flex;
   flex-flow: column;
@@ -175,6 +184,7 @@ h2 {
   color: var(--txtcol-subtle);
 }
 
+/* —————————— SETTINGS (CALCULATION SYSTEM, DECIMAL SEPARATOR, ETC.) —————————— */
 .setting {
   display: flex;
   flex-flow: row wrap;
@@ -207,58 +217,7 @@ h2 {
 	-webkit-appearance: none;
 }
 
-.info {
-  display: grid;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 10px;
-  width: calc(100% - 16px);
-  margin: 0px 8px 5px 8px;
-}
-
-.col-center {
-  justify-content: center;
-}
-
-.col2 {
-  grid-template-columns: 1fr 1fr;
-}
-
-.col3 {
-  grid-template-columns: 1fr 1fr 1fr;
-}
-
-.info i {
-  color: var(--txtcol-subtle)
-}
-
-.info a {
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.info a:hover {
-  text-decoration: underline;
-}
-
-#update-btn {
-  display: block;
-  font-size: 11pt;
-  line-height: 1;
-  padding: 5px 10px;
-  margin-top: 5px;
-  border: none;
-  outline: none;
-  border-radius: var(--cors);
-  background: var(--wincol-lighter);
-  cursor: pointer;
-  transition: var(--trans);
-}
-
-#update-btn:hover {
-  background: var(--pricol-hover);
-}
-
+/* —————————— DONATE BANNER —————————— */
 #donate {
   display: flex;
   flex-flow: column;
@@ -315,6 +274,61 @@ h2 {
   box-shadow: 0px 0px 15px #0087FF80;
 }
 
+/* —————————— INFO, COLUMNS, AND BUTTONS (ABOUT WINDOW, ETC.) —————————— */
+.info {
+  display: grid;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+  width: calc(100% - 16px);
+  margin: 0px 8px 5px 8px;
+}
+
+.col-center {
+  justify-content: center;
+}
+
+.col2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.col3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.info i {
+  color: var(--txtcol-subtle)
+}
+
+.info a {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.info a:hover {
+  text-decoration: underline;
+}
+
+#update-btn, .external-link-button {
+  display: block;
+  font-size: 11pt;
+  line-height: 1;
+  text-decoration: none !important;
+  width: max-content;
+  padding: 5px 10px;
+  margin: 5px auto 0 auto;
+  border: none;
+  outline: none;
+  border-radius: var(--cors);
+  background: var(--wincol-lighter);
+  cursor: pointer;
+  transition: var(--trans);
+}
+
+#update-btn:hover, .external-link-button:hover {
+  background: var(--pricol-hover);
+}
+
 .info ul {
   display: block;
   margin-left: calc(var(--winspace) / 2);
@@ -353,6 +367,7 @@ h2 {
   box-shadow: var(--inshadow);
 }
 
+/* —————————— HISTORY WINDOW —————————— */
 #refresh-history {
   display: flex;
   justify-content: center;
@@ -428,6 +443,7 @@ h2 {
   border-right: none;
 }
 
+/* —————————— ADDITIONAL WINDOW CONTROLS (PRUNE CONTROLS, ETC.) —————————— */
 .exit-controls {
   display: flex;
   justify-content: center;
@@ -520,6 +536,7 @@ h2 {
   line-height: 1;
 }
 
+/* —————————— HISTORY LIST —————————— */
 #history-list {
   display: block;
   position: absolute;
@@ -626,7 +643,13 @@ h2 {
   box-shadow: var(--inshadow);
 }
 
+/* —————————— MAIN WINDOW UI —————————— */
+#main-ui {
+  display: grid;
+  grid-template-columns: 170px auto;
+}
 
+/* —————————— MAIN WINDOW MENUBAR —————————— */
 #menubar {
   display: flex;
   align-items: center;
@@ -753,11 +776,7 @@ h2 {
   max-height: 100%;
 }
 
-#main-ui {
-  display: grid;
-  grid-template-columns: 170px auto;
-}
-
+/* —————————— VARIABLES PANEL —————————— */
 #variables {
   display: flex;
   flex-flow: column;
@@ -907,6 +926,7 @@ h2 {
   opacity: 1;
 }
 
+/* —————————— CALCULATOR UI —————————— */
 #calculators {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -1,8 +1,10 @@
 import BigNumber from "bignumber.js";
 import xSvg from '../img/x.svg';
 
+
+// —————————— ESCAPE KEY ——————————
 window.addEventListener('keydown', (e) => {
-  if (e.key == 'Escape') {
+  if (e.key === 'Escape') {
     aboutWindow.removeAttribute('style');
     settingsWindow.removeAttribute('style');
     historyWindow.removeAttribute('style');
@@ -12,7 +14,9 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-let currentVersion = "";
+
+// —————————— APPLICATION INFOFORMATION ——————————
+let currentVersion = '';
 window.appInfo.getInfo().then(info => {
   document.getElementById("info-appname").innerHTML = `<b>App Name:</b> ${info.name}`;
   document.getElementById("info-version").innerHTML = `<b>Version:</b> ${info.version}`;
@@ -23,16 +27,21 @@ window.appInfo.getInfo().then(info => {
   document.getElementById("info-website-link").addEventListener('click', (e) => {const link = e.target.closest('a[href]');if (!link) return;e.preventDefault();window.electron.openExternal(link.href);});
 });
 
-for (const link of document.getElementsByClassName('external-link')) {
+// Make all external links open in the default browser
+for (const link of document.querySelectorAll('.external-link, .external-link-button')) {
   link.addEventListener('click', (e) => {const link = e.target.closest('a[href]');if (!link) return;e.preventDefault();window.electron.openExternal(link.href);});
 }
 
-// ========== ABOUT WINDOW ================================================================================
 
+// —————————— ABOUT WINDOW ——————————
 const aboutWindow = document.getElementById('about-window');
+
+// Exit
 aboutWindow.children[0].addEventListener('click', function(e) {
   aboutWindow.removeAttribute('style');
 });
+
+// Check for updates
 document.getElementById("update-btn").addEventListener('click', (e) => {
   let newVersion = "";
   fetch('https://blendertimer.com/software/mathmetic/version.txt').then(res => res.text()).then(text => {
@@ -46,10 +55,13 @@ document.getElementById("update-btn").addEventListener('click', (e) => {
     }
   }).catch(error => {document.getElementById("update-result").innerHTML = `<b style="color: #ff3232">Unable to check for updates. Check your internet connection.</b>`});
 });
+
+// Donate
 document.getElementById("donate-btn").addEventListener('click', (e) => {
   window.electron.openExternal('https://blendertimer.com/donate?p=Mathmetic+Donation');
 });
 
+// Toggle function descriptions in "Syntax, Functions, and Variables"
 for (const li of document.getElementsByTagName('li')) {
   li.addEventListener('click', (e) => {
     if (e.currentTarget.style.textWrapMode == 'wrap') {e.currentTarget.removeAttribute('style')}
@@ -59,13 +71,16 @@ for (const li of document.getElementsByTagName('li')) {
   });
 }
 
-// ========== SETTINGS WINDOW ================================================================================
 
+// —————————— SETTINGS WINDOW ——————————
 const settingsWindow = document.getElementById('settings-window');
+
+// Exit
 settingsWindow.children[0].addEventListener('click', function(e) {
   settingsWindow.removeAttribute('style');
 });
 
+// Calculation system selector
 const calcSysCont = document.getElementById('calc-sys');
 calcSysCont.children[0].addEventListener('click', function(e) {
   e.target.style.background = "var(--pricol)";
@@ -79,9 +94,12 @@ calcSysCont.children[1].addEventListener('click', function(e) {
   window.settings.setCalcSys('integer');
   window.settings.saveSettings();
 });
-if (window.settings.getCalcSys() == 'decimal') {calcSysCont.children[0].style.background = "var(--pricol)"}
+
+// Load calculation system on startup
+if (window.settings.getCalcSys() === 'decimal') {calcSysCont.children[0].style.background = "var(--pricol)"}
 else {calcSysCont.children[1].style.background = "var(--pricol)"};
 
+// Default trigonometry mode
 const trigModeContDef = document.getElementById('trig-mode-def');
 trigModeContDef.children[0].addEventListener('click', function(e) {
   e.target.style.background = "var(--pricol)";
@@ -95,9 +113,12 @@ trigModeContDef.children[1].addEventListener('click', function(e) {
   window.settings.setTrig('rad');
   window.settings.saveSettings();
 });
-if (window.settings.getTrig() == 'deg') {trigModeContDef.children[0].style.background = "var(--pricol)"}
+
+// Load default trigonometry mode on startup
+if (window.settings.getTrig() === 'deg') {trigModeContDef.children[0].style.background = "var(--pricol)"}
 else {trigModeContDef.children[1].style.background = "var(--pricol)"};
 
+// Decimal precision
 const decPrecisionContDef = document.getElementById('decimal-precision-def');
 decPrecisionContDef.value = window.settings.getPrecision();
 decPrecisionContDef.addEventListener('input', function(e) {
@@ -108,6 +129,7 @@ decPrecisionContDef.addEventListener('input', function(e) {
   }
 });
 
+// Decimal separator
 const decSepCont = document.getElementById('dec-sep');
 decSepCont.value = window.settings.getFormatting('decimal');
 decSepCont.addEventListener('input', function(e) {
@@ -117,6 +139,7 @@ decSepCont.addEventListener('input', function(e) {
   }
 });
 
+// Thousands separator
 const thouSepCont = document.getElementById('thou-sep');
 thouSepCont.value = window.settings.getFormatting('thousands');
 thouSepCont.addEventListener('input', function(e) {
@@ -126,6 +149,7 @@ thouSepCont.addEventListener('input', function(e) {
   }
 });
 
+// Window on top by default
 const ontopContDef = document.getElementById('ontop-def');
 ontopContDef.children[0].addEventListener('click', function(e) {
   e.target.style.background = "var(--pricol)";
@@ -139,16 +163,20 @@ ontopContDef.children[1].addEventListener('click', function(e) {
   window.settings.setOnTop(false);
   window.settings.saveSettings();
 });
-if (window.settings.getOnTop() == true) {ontopContDef.children[0].style.background = "var(--pricol)"}
+
+// Load on top setting on startup
+if (window.settings.getOnTop() === true) {ontopContDef.children[0].style.background = "var(--pricol)"}
 else {ontopContDef.children[1].style.background = "var(--pricol)"};
 
-// ========== HISTORY WINDOW ================================================================================
 
+// —————————— HISTORY WINDOW ——————————
 let historyLoadedTo = 0;
 let historyHeight = 0;
 let historySort = 'latest';
 
 const historyWindow = document.getElementById('history-window');
+
+// Exit
 const historyList = document.getElementById('history-list');
 historyWindow.children[0].children[0].addEventListener('click', function(e) {
   historyWindow.removeAttribute('style');
@@ -157,25 +185,26 @@ historyWindow.children[0].children[0].addEventListener('click', function(e) {
   historyHeight = 0;
 });
 
-historyWindow.children[0].children[1].addEventListener('click', function(e) {
-  refreshHistory();
-});
+// Refresh history button
+historyWindow.children[0].children[1].addEventListener('click', function(e) {refreshHistory()});
 
 // Pruning
-historyWindow.children[0].children[3].addEventListener('click', function(e) {pruneControls.style.display = 'flex';});
-const pruneControls = document.getElementById('prune-controls');
+historyWindow.children[0].children[3].addEventListener('click', function(e) {pruneControls.style.display = 'flex'});
 
+// Exit pruning
+document.getElementById('prune-controls-exit').addEventListener('click', function(e) {pruneControls.removeAttribute('style')});
+
+// Prune controls
+const pruneControls = document.getElementById('prune-controls');
 const pruneAgeToggle = document.getElementById('prune-age-toggle');
 const pruneAge = document.getElementById('prune-age');
 pruneAgeToggle.children[0].addEventListener('click', function(e) {
   e.target.style.background = "var(--pricol)";
   pruneAgeToggle.children[1].removeAttribute('style');
-  // 
 });
 pruneAgeToggle.children[1].addEventListener('click', function(e) {
   e.target.style.background = "var(--pricol)";
   pruneAgeToggle.children[0].removeAttribute('style');
-  // 
 });
 pruneAgeToggle.children[1].style.background = "var(--pricol)";
 
@@ -184,17 +213,16 @@ const pruneLength = document.getElementById('prune-length');
 pruneLengthToggle.children[0].addEventListener('click', function(e) {
   e.target.style.background = "var(--pricol)";
   pruneLengthToggle.children[1].removeAttribute('style');
-  // 
 });
 pruneLengthToggle.children[1].addEventListener('click', function(e) {
   e.target.style.background = "var(--pricol)";
   pruneLengthToggle.children[0].removeAttribute('style');
-  // 
 });
 pruneLengthToggle.children[1].style.background = "var(--pricol)";
 
 const pruneButton = document.getElementById('prune-button');
 pruneButton.addEventListener('click', () => {pruneHistory()});
+
 function pruneHistory() {
   const ageEnabled = (pruneAgeToggle.children[1].style.background && pruneAgeToggle.children[1].style.background.length > 0) ? true : false;
   const lengthEnabled = (pruneLengthToggle.children[1].style.background && pruneLengthToggle.children[1].style.background.length > 0) ? true : false;
@@ -203,7 +231,7 @@ function pruneHistory() {
   refreshHistory();
 }
 
-
+// History list
 function loadHistoryUI() {
   const hist = window.calchistory.getHistory();
   const hl = hist.length;
@@ -274,6 +302,7 @@ function refreshHistory() {
   loadHistoryUI();
 }
 
+// History sorting
 const historySortCont = document.getElementById('history-sort');
 historySortCont.children[0].addEventListener('click', function(e) {
   e.target.style.background = "var(--pricol)";
@@ -307,13 +336,14 @@ historySortCont.children[3].addEventListener('click', function(e) {
   historySort = e.target.textContent.toLowerCase();
   refreshHistory();
 });
-if (historySort == 'latest') {historySortCont.children[0].style.background = "var(--pricol)"}
-else if (historySort == 'oldest') {historySortCont.children[1].style.background = "var(--pricol)"}
-else if (historySort == 'fastest') {historySortCont.children[2].style.background = "var(--pricol)"}
-else if (historySort == 'slowest') {historySortCont.children[3].style.background = "var(--pricol)"};
+if (historySort === 'latest') {historySortCont.children[0].style.background = "var(--pricol)"}
+else if (historySort === 'oldest') {historySortCont.children[1].style.background = "var(--pricol)"}
+else if (historySort === 'fastest') {historySortCont.children[2].style.background = "var(--pricol)"}
+else if (historySort === 'slowest') {historySortCont.children[3].style.background = "var(--pricol)"};
 
-// ========== MENU ================================================================================
 
+// —————————— MENUBAR ——————————
+// Trigonometry mode
 let trigMode = window.settings.getTrig();
 const trigModeCont = document.getElementById('trig-mode');
 trigModeCont.children[0].addEventListener('click', function(e) {
@@ -326,20 +356,27 @@ trigModeCont.children[1].addEventListener('click', function(e) {
   trigModeCont.children[0].removeAttribute('style');
   trigMode = 'rad';
 });
-if (trigMode == 'deg') {trigModeCont.children[0].style.background = "var(--pricol)"}
+
+// Load trigonometry mode on startup
+if (trigMode === 'deg') {trigModeCont.children[0].style.background = "var(--pricol)"}
 else {trigModeCont.children[1].style.background = "var(--pricol)"};
 
+// Error display
 const errorDisplay = document.getElementById('error-display');
 
+// On top
 document.getElementById('ontop-btn').addEventListener('click', function(e) {
   if (e.target.style.background) {window.mainWindow.setAlwaysOnTop(false);e.target.style.background = null}
   else {window.mainWindow.setAlwaysOnTop(true);e.target.style.background = "var(--pricol)"};
 });
-if (window.settings.getOnTop() == true) {
+
+// Load on top setting on startup
+if (window.settings.getOnTop() === true) {
   window.mainWindow.setAlwaysOnTop(true);
   document.getElementById('ontop-btn').style.background = "var(--pricol)";
 }
 
+// Additional menu buttons
 document.getElementById('history-btn').addEventListener('click', function(e) {
   if (historyWindow.style.display) {historyWindow.removeAttribute('style');while (historyWindow.children.length > 1) {historyWindow.lastChild.remove()};historyLoadedTo = 0;historyHeight = 0;}
   else {loadHistoryUI();historyWindow.style.display = "block"};
@@ -355,13 +392,14 @@ document.getElementById('about-btn').addEventListener('click', function(e) {
   else {aboutWindow.style.display = "block"};
 });
 
-// ========== VARIABLES ================================================================================
 
+// —————————— VARIABLES ——————————
 const variableList = document.getElementById('variable-list');
 
+// Hide/exit variables
 const hideVariables = document.getElementById('hide-variables');
 hideVariables.addEventListener('click', function (e) {
-  if (window.settings.getVariablesVisible() == true) {
+  if (window.settings.getVariablesVisible() === true) {
     window.settings.setVariablesVisible(false);
     varVis(false);
   }
@@ -401,26 +439,8 @@ function varVis(visible) {
   }
 }
 
+// Create new variable
 document.getElementById('new-variable').addEventListener('click', function() {newVariable()});
-
-function updateVariables() {
-  let vars = _defaultCalc.getVariables();
-  let varKeys = Object.keys(vars);
-  let newVars = {};
-  for (let i=0; i < varKeys.length; i++) {
-    if (!(Object.keys(_defaultVariables).includes(varKeys[i])) && !(['calc1', 'calc2', 'calc3', 'calc4', 'calc5', 'calc6'].includes(varKeys[i]))) {newVars[varKeys[i]] = vars[varKeys[i]]};
-  }
-  window.settings.writeVariables(newVars);
-  window.settings.saveSettings();
-}
-
-function refreshVariables() {
-  let vars = _defaultCalc.getVariables();
-  let varKeys = Object.keys(vars);
-  for (let i=0; i < varKeys.length; i++) {
-    if (!(Object.keys(_defaultVariables).includes(varKeys[i])) && !(['calc1', 'calc2', 'calc3', 'calc4', 'calc5', 'calc6'].includes(varKeys[i]))) {newVariable(varKeys[i], vars[varKeys[i]])};
-  }
-}
 
 function newVariable(name = '', value = '') {
   const item = document.createElement('div');
@@ -477,9 +497,31 @@ function newVariable(name = '', value = '') {
   variableList.appendChild(item);
 }
 
-// ========== CALCULATORS ================================================================================
+function updateVariables() {
+  let vars = _defaultCalc.getVariables();
+  let varKeys = Object.keys(vars);
+  let newVars = {};
+  for (let i=0; i < varKeys.length; i++) {
+    if (!(Object.keys(_defaultVariables).includes(varKeys[i])) && !(['calc1', 'calc2', 'calc3', 'calc4', 'calc5', 'calc6'].includes(varKeys[i]))) {newVars[varKeys[i]] = vars[varKeys[i]]};
+  }
+  window.settings.writeVariables(newVars);
+  window.settings.saveSettings();
+}
+
+function refreshVariables() {
+  let vars = _defaultCalc.getVariables();
+  let varKeys = Object.keys(vars);
+  for (let i=0; i < varKeys.length; i++) {
+    if (!(Object.keys(_defaultVariables).includes(varKeys[i])) && !(['calc1', 'calc2', 'calc3', 'calc4', 'calc5', 'calc6'].includes(varKeys[i]))) {newVariable(varKeys[i], vars[varKeys[i]])};
+  }
+}
+
+
+// —————————— CALCULATORS ——————————
 function clamp(value, min, max) {return Math.max(min, Math.min(max, value))};
 
+
+// —————————— CALCULATOR 1 ——————————
 const calc1 = document.getElementById('calculator1');
 const calc1Formula = document.getElementById('calc1-formula');
 const calc1FullResult = document.getElementById('calc1-fullresult');
@@ -493,7 +535,8 @@ calc1.children[5].addEventListener('click', function(e) {
   formulaInput(e.target.parentNode.children[0], 'calc1');
 });
 let calc1LastCalc = {formula:"", fullresult:"", result:"", calc:"calc1", precision:20, time:0, date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:true};
-// ----- calc1Formula Scrolling -----
+
+// calc1Formula Scrolling
 let calc1FormulaScroll = 0;
 let calc1FormulaBlurring = false;
 let calc1FormulaTargetScroll = 0;
@@ -520,7 +563,8 @@ function calc1FormulaAnimateScroll() {
   if (Math.abs(diff) > 0.5) {requestAnimationFrame(calc1FormulaAnimateScroll)}
   else {calc1Formula.scrollLeft = calc1FormulaTargetScroll;calc1FormulaScrolling = false};
 }
-// ----- calc1FullResult Scrolling -----
+
+// calc1FullResult Scrolling
 let calc1FullResultScroll = 0;
 let calc1FullResultBlurring = false;
 let calc1FullResultTargetScroll = 0;
@@ -547,7 +591,8 @@ function calc1FullResultAnimateScroll() {
   if (Math.abs(diff) > 0.5) {requestAnimationFrame(calc1FullResultAnimateScroll)}
   else {calc1FullResult.scrollLeft = calc1FullResultTargetScroll;calc1FullResultScrolling = false};
 }
-// ----- calc1Result Scrolling -----
+
+// calc1Result Scrolling
 let calc1ResultScroll = 0;
 let calc1ResultBlurring = false;
 let calc1ResultTargetScroll = 0;
@@ -575,6 +620,8 @@ function calc1ResultAnimateScroll() {
   else {calc1Result.scrollLeft = calc1ResultTargetScroll;calc1ResultScrolling = false};
 }
 
+
+// —————————— CALCULATOR 2 ——————————
 const calc2 = document.getElementById('calculator2');
 const calc2Formula = document.getElementById('calc2-formula');
 const calc2FullResult = document.getElementById('calc2-fullresult');
@@ -588,7 +635,8 @@ calc2.children[5].addEventListener('click', function(e) {
   formulaInput(e.target.parentNode.children[0], 'calc2');
 });
 let calc2LastCalc = {formula:"", fullresult:"", result:"", calc:"calc2", precision:20, time:0, date:Date.now(), sys:window.settings.getCalcSys(), logged:true};
-// ----- calc2Formula Scrolling -----
+
+// calc2Formula Scrolling
 let calc2FormulaScroll = 0;
 let calc2FormulaBlurring = false;
 let calc2FormulaTargetScroll = 0;
@@ -615,7 +663,8 @@ function calc2FormulaAnimateScroll() {
   if (Math.abs(diff) > 0.5) {requestAnimationFrame(calc2FormulaAnimateScroll)}
   else {calc2Formula.scrollLeft = calc2FormulaTargetScroll;calc2FormulaScrolling = false};
 }
-// ----- calc2FullResult Scrolling -----
+
+// calc2FullResult Scrolling
 let calc2FullResultScroll = 0;
 let calc2FullResultBlurring = false;
 let calc2FullResultTargetScroll = 0;
@@ -642,7 +691,8 @@ function calc2FullResultAnimateScroll() {
   if (Math.abs(diff) > 0.5) {requestAnimationFrame(calc2FullResultAnimateScroll)}
   else {calc2FullResult.scrollLeft = calc2FullResultTargetScroll;calc2FullResultScrolling = false};
 }
-// ----- calc2Result Scrolling -----
+
+// calc2Result Scrolling
 let calc2ResultScroll = 0;
 let calc2ResultBlurring = false;
 let calc2ResultTargetScroll = 0;
@@ -670,6 +720,8 @@ function calc2ResultAnimateScroll() {
   else {calc2Result.scrollLeft = calc2ResultTargetScroll;calc2ResultScrolling = false};
 }
 
+
+// —————————— CALCULATOR 3 ——————————
 const calc3 = document.getElementById('calculator3');
 const calc3Formula = document.getElementById('calc3-formula');
 const calc3FullResult = document.getElementById('calc3-fullresult');
@@ -683,7 +735,8 @@ calc3.children[5].addEventListener('click', function(e) {
   formulaInput(e.target.parentNode.children[0], 'calc3');
 });
 let calc3LastCalc = {formula:"", fullresult:"", result:"", calc:"calc3", precision:20, time:0, date:Date.now(), sys:window.settings.getCalcSys(), logged:true};
-// ----- calc3Formula Scrolling -----
+
+// calc3Formula Scrolling
 let calc3FormulaScroll = 0;
 let calc3FormulaBlurring = false;
 let calc3FormulaTargetScroll = 0;
@@ -710,7 +763,8 @@ function calc3FormulaAnimateScroll() {
   if (Math.abs(diff) > 0.5) {requestAnimationFrame(calc3FormulaAnimateScroll)}
   else {calc3Formula.scrollLeft = calc3FormulaTargetScroll;calc3FormulaScrolling = false};
 }
-// ----- calc3FullResult Scrolling -----
+
+// calc3FullResult Scrolling
 let calc3FullResultScroll = 0;
 let calc3FullResultBlurring = false;
 let calc3FullResultTargetScroll = 0;
@@ -737,7 +791,8 @@ function calc3FullResultAnimateScroll() {
   if (Math.abs(diff) > 0.5) {requestAnimationFrame(calc3FullResultAnimateScroll)}
   else {calc3FullResult.scrollLeft = calc3FullResultTargetScroll;calc3FullResultScrolling = false};
 }
-// ----- calc3Result Scrolling -----
+
+// calc3Result Scrolling
 let calc3ResultScroll = 0;
 let calc3ResultBlurring = false;
 let calc3ResultTargetScroll = 0;
@@ -765,6 +820,8 @@ function calc3ResultAnimateScroll() {
   else {calc3Result.scrollLeft = calc3ResultTargetScroll;calc3ResultScrolling = false};
 }
 
+
+// —————————— CALCULATOR 4 ——————————
 const calc4 = document.getElementById('calculator4');
 const calc4Formula = document.getElementById('calc4-formula');
 const calc4FullResult = document.getElementById('calc4-fullresult');
@@ -778,7 +835,8 @@ calc4.children[5].addEventListener('click', function(e) {
   formulaInput(e.target.parentNode.children[0], 'calc4');
 });
 let calc4LastCalc = {formula:"", fullresult:"", result:"", calc:"calc4", precision:20, time:0, date:Date.now(), sys:window.settings.getCalcSys(), logged:true};
-// ----- calc4Formula Scrolling -----
+
+// calc4Formula Scrolling
 let calc4FormulaScroll = 0;
 let calc4FormulaBlurring = false;
 let calc4FormulaTargetScroll = 0;
@@ -805,7 +863,8 @@ function calc4FormulaAnimateScroll() {
   if (Math.abs(diff) > 0.5) {requestAnimationFrame(calc4FormulaAnimateScroll)}
   else {calc4Formula.scrollLeft = calc4FormulaTargetScroll;calc4FormulaScrolling = false};
 }
-// ----- calc4FullResult Scrolling -----
+
+// calc4FullResult Scrolling
 let calc4FullResultScroll = 0;
 let calc4FullResultBlurring = false;
 let calc4FullResultTargetScroll = 0;
@@ -832,7 +891,8 @@ function calc4FullResultAnimateScroll() {
   if (Math.abs(diff) > 0.5) {requestAnimationFrame(calc4FullResultAnimateScroll)}
   else {calc4FullResult.scrollLeft = calc4FullResultTargetScroll;calc4FullResultScrolling = false};
 }
-// ----- calc4Result Scrolling -----
+
+// calc4Result Scrolling
 let calc4ResultScroll = 0;
 let calc4ResultBlurring = false;
 let calc4ResultTargetScroll = 0;
@@ -860,6 +920,8 @@ function calc4ResultAnimateScroll() {
   else {calc4Result.scrollLeft = calc4ResultTargetScroll;calc4ResultScrolling = false};
 }
 
+
+// —————————— CALCULATOR 5 ——————————
 const calc5 = document.getElementById('calculator5');
 const calc5Formula = document.getElementById('calc5-formula');
 const calc5FullResult = document.getElementById('calc5-fullresult');
@@ -873,7 +935,8 @@ calc5.children[5].addEventListener('click', function(e) {
   formulaInput(e.target.parentNode.children[0], 'calc5');
 });
 let calc5LastCalc = {formula:"", fullresult:"", result:"", calc:"calc5", precision:20, time:0, date:Date.now(), sys:window.settings.getCalcSys(), logged:true};
-// ----- calc5Formula Scrolling -----
+
+// calc5Formula Scrolling
 let calc5FormulaScroll = 0;
 let calc5FormulaBlurring = false;
 let calc5FormulaTargetScroll = 0;
@@ -900,7 +963,8 @@ function calc5FormulaAnimateScroll() {
   if (Math.abs(diff) > 0.5) {requestAnimationFrame(calc5FormulaAnimateScroll)}
   else {calc5Formula.scrollLeft = calc5FormulaTargetScroll;calc5FormulaScrolling = false};
 }
-// ----- calc5FullResult Scrolling -----
+
+// calc5FullResult Scrolling
 let calc5FullResultScroll = 0;
 let calc5FullResultBlurring = false;
 let calc5FullResultTargetScroll = 0;
@@ -927,7 +991,8 @@ function calc5FullResultAnimateScroll() {
   if (Math.abs(diff) > 0.5) {requestAnimationFrame(calc5FullResultAnimateScroll)}
   else {calc5FullResult.scrollLeft = calc5FullResultTargetScroll;calc5FullResultScrolling = false};
 }
-// ----- calc5Result Scrolling -----
+
+// calc5Result Scrolling
 let calc5ResultScroll = 0;
 let calc5ResultBlurring = false;
 let calc5ResultTargetScroll = 0;
@@ -955,6 +1020,8 @@ function calc5ResultAnimateScroll() {
   else {calc5Result.scrollLeft = calc5ResultTargetScroll;calc5ResultScrolling = false};
 }
 
+
+// —————————— CALCULATOR 6 ——————————
 const calc6 = document.getElementById('calculator6');
 const calc6Formula = document.getElementById('calc6-formula');
 const calc6FullResult = document.getElementById('calc6-fullresult');
@@ -968,7 +1035,8 @@ calc6.children[5].addEventListener('click', function(e) {
   formulaInput(e.target.parentNode.children[0], 'calc6');
 });
 let calc6LastCalc = {formula:"", fullresult:"", result:"", calc:"calc6", precision:20, time:0, date:Date.now(), sys:window.settings.getCalcSys(), logged:true};
-// ----- calc6Formula Scrolling -----
+
+// calc6Formula Scrolling
 let calc6FormulaScroll = 0;
 let calc6FormulaBlurring = false;
 let calc6FormulaTargetScroll = 0;
@@ -995,7 +1063,8 @@ function calc6FormulaAnimateScroll() {
   if (Math.abs(diff) > 0.5) {requestAnimationFrame(calc6FormulaAnimateScroll)}
   else {calc6Formula.scrollLeft = calc6FormulaTargetScroll;calc6FormulaScrolling = false};
 }
-// ----- calc6FullResult Scrolling -----
+
+// calc6FullResult Scrolling
 let calc6FullResultScroll = 0;
 let calc6FullResultBlurring = false;
 let calc6FullResultTargetScroll = 0;
@@ -1022,7 +1091,8 @@ function calc6FullResultAnimateScroll() {
   if (Math.abs(diff) > 0.5) {requestAnimationFrame(calc6FullResultAnimateScroll)}
   else {calc6FullResult.scrollLeft = calc6FullResultTargetScroll;calc6FullResultScrolling = false};
 }
-// ----- calc6Result Scrolling -----
+
+// calc6Result Scrolling
 let calc6ResultScroll = 0;
 let calc6ResultBlurring = false;
 let calc6ResultTargetScroll = 0;
@@ -1050,6 +1120,8 @@ function calc6ResultAnimateScroll() {
   else {calc6Result.scrollLeft = calc6ResultTargetScroll;calc6ResultScrolling = false};
 }
 
+
+// —————————— FORMULA INPUTS ——————————
 const calcs = {
   calc1:{base:calc1,formula:calc1Formula,fullresult:calc1FullResult,result:calc1Result},
   calc2:{base:calc2,formula:calc2Formula,fullresult:calc2FullResult,result:calc2Result},
@@ -1060,58 +1132,59 @@ const calcs = {
 };
 
 function formulaInput(e, calc, stack = []) {
-    let calcElements = calcs[calc];
-    let t = performance.now();
-    if (stack.includes(calc)) {
-        for (let i=0; i < stack.length; i++) {
-          writeError(calcs[stack[i]], {text: `Circular reference: ${stack.join(" → ")}`, button: 'none'});
-        }
-        stack.push(calc);
-        writeError(calcElements, {text: `Circular reference: ${stack.join(" → ")}`, button: 'none'});
-        BYPASS_LIMITS = false;
-        return;
+  let calcElements = calcs[calc];
+  let t = performance.now();
+  if (stack.includes(calc)) {
+    for (let i=0; i < stack.length; i++) {
+      writeError(calcs[stack[i]], {text: `Circular reference: ${stack.join(" → ")}`, button: 'none'});
     }
     stack.push(calc);
-    let el = e.target || e;
-    let result = {result:'',full:'',error:null};
-    fmt.groupSeparator = el.parentNode.children[5].style.background ? window.settings.getFormatting('thousands') : '';
-    fmt.decimalSeparator = window.settings.getFormatting('decimal');
-
-    // Calculate
-    if (el.value.length > 0) {result = calculate(el.value, {trigMode:trigMode, decimalSep:window.settings.getFormatting('decimal'), thousandSep:window.settings.getFormatting('thousands')})};
-
-    if (result.error) {
-        writeError(calcElements, result.error);
-        if (calc == 'calc1') {calc1LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}}
-        else if (calc == 'calc2') {calc2LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}}
-        else if (calc == 'calc3') {calc3LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}}
-        else if (calc == 'calc4') {calc4LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}}
-        else if (calc == 'calc5') {calc5LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}}
-        else if (calc == 'calc6') {calc6LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}};
-    }
-    else {
-        clearError(calcElements);
-        calcElements.fullresult.value = result.full;
-        calcElements.result.value = result.result;
-        if (result.full.length == 0) {_defaultCalc.removeVariable(calc)} else {_defaultCalc.setVariable(calc, result.fullnonformatted, true)};
-        let lc = {formula:el.value, fullresult:result.full, result:result.result, calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false};
-        if (calc == 'calc1') {calc1LastCalc = lc}
-        else if (calc == 'calc2') {calc2LastCalc = lc}
-        else if (calc == 'calc3') {calc3LastCalc = lc}
-        else if (calc == 'calc4') {calc4LastCalc = lc}
-        else if (calc == 'calc5') {calc5LastCalc = lc}
-        else if (calc == 'calc6') {calc6LastCalc = lc};
-        for (let i = 1; i <= 6; i++) {
-            let name = `calc${i}`;
-            let input = document.getElementById(`calc${i}-formula`);
-            if (input.value.includes(calc)) {
-                formulaInput(input, name, stack);
-            }
-        }
-    }
+    writeError(calcElements, {text: `Circular reference: ${stack.join(" → ")}`, button: 'none'});
     BYPASS_LIMITS = false;
+    return;
+  }
+  stack.push(calc);
+  let el = e.target || e;
+  let result = {result:'',full:'',error:null};
+  fmt.groupSeparator = el.parentNode.children[5].style.background ? window.settings.getFormatting('thousands') : '';
+  fmt.decimalSeparator = window.settings.getFormatting('decimal');
+
+  // Calculate
+  if (el.value.length > 0) {result = calculate(el.value, {trigMode:trigMode, decimalSep:window.settings.getFormatting('decimal'), thousandSep:window.settings.getFormatting('thousands')})};
+
+  if (result.error) {
+    writeError(calcElements, result.error);
+    if (calc == 'calc1') {calc1LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}}
+    else if (calc == 'calc2') {calc2LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}}
+    else if (calc == 'calc3') {calc3LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}}
+    else if (calc == 'calc4') {calc4LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}}
+    else if (calc == 'calc5') {calc5LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}}
+    else if (calc == 'calc6') {calc6LastCalc = {formula:el.value, fullresult:"ERROR", result:"ERROR", calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false}};
+  }
+  else {
+    clearError(calcElements);
+    calcElements.fullresult.value = result.full;
+    calcElements.result.value = result.result;
+    if (result.full.length == 0) {_defaultCalc.removeVariable(calc)} else {_defaultCalc.setVariable(calc, result.fullnonformatted, true)};
+    let lc = {formula:el.value, fullresult:result.full, result:result.result, calc:calc, precision:getPrecision(), time:(performance.now()-t).toFixed(1), date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys(), logged:false};
+    if (calc == 'calc1') {calc1LastCalc = lc}
+    else if (calc == 'calc2') {calc2LastCalc = lc}
+    else if (calc == 'calc3') {calc3LastCalc = lc}
+    else if (calc == 'calc4') {calc4LastCalc = lc}
+    else if (calc == 'calc5') {calc5LastCalc = lc}
+    else if (calc == 'calc6') {calc6LastCalc = lc};
+    for (let i = 1; i <= 6; i++) {
+      let name = `calc${i}`;
+      let input = document.getElementById(`calc${i}-formula`);
+      if (input.value.includes(calc)) {
+        formulaInput(input, name, stack);
+      }
+    }
+  }
+  BYPASS_LIMITS = false;
 }
 
+// Error printing
 function writeError(elements, error = {text:'Unknown error',button:'none'}) {
   if (elements) {
     elements.base.style.background = "#F00";
@@ -1141,10 +1214,11 @@ function clearError(elements) {
 }
 
 
+
 // ========== MATH PARSER ================================================================================
 // =======================================================================================================
 
-// ─── FORMAT CONFIG ────────────────────────────────────────────────────────────
+// —————————— FORMAT CONFIGURATION ——————————
 let fmt = {
   prefix: '',
   decimalSeparator: '.',
@@ -1166,7 +1240,7 @@ let fmtnonformatted = {
   suffix: '',
 };
 
-// ─── PRECISION ────────────────────────────────────────────────────────────────
+// —————————— PRECISON ——————————
 let PRECISION = window.settings.getPrecision();
 
 function refreshBigNumber() {
@@ -1178,8 +1252,7 @@ function refreshBigNumber() {
 
 let BYPASS_LIMITS = false;
 
-// ─── HIGH-PRECISION MATH LIBRARY ─────────────────────────────────────────────
-
+// —————————— HIGH-PRECISION MATH LIBRARY ——————————
 function _computePI() {
   // Chudnovsky algorithm with Binary Splitting
   //
@@ -1241,9 +1314,9 @@ function _computePI() {
     const { P: Pr, Q: Qr, T: Tr } = binarySplit(m, b);
 
     return {
-      P: Pl.times(Pr),           // always positive, no sign pollution
+      P: Pl.times(Pr), // always positive, no sign pollution
       Q: Ql.times(Qr),
-      T: Tl.times(Qr).plus(Pl.times(Tr)),  // sign already baked into Tl, Tr
+      T: Tl.times(Qr).plus(Pl.times(Tr)), // sign already baked into Tl, Tr
     };
   }
 
@@ -1253,7 +1326,6 @@ function _computePI() {
  const sqrt10005 = new BigNumber(10005).sqrt();
   return new BigNumber(426880).times(sqrt10005).times(Q).dividedBy(T);
 }
-
 
 function _computeLN2() {
   const x = new BigNumber(1).dividedBy(3), x2 = x.times(x);
@@ -1492,9 +1564,10 @@ function _power(base, exponent) {
 function _toRad(x) { return new BigNumber(x.toString()).times(_getPI().toString()).dividedBy(180); }
 function _toDeg(x) { return new BigNumber(x.toString()).times(180).dividedBy(_getPI().toString()); }
 
-// ─── UNIT CONVERSION TABLE ────────────────────────────────────────────────────
+
+// —————————— UNIT CONVERSION TABLE ——————————
 const UNIT_CATEGORIES = [
-  // ── Length (base: metre) ─────────────────────────────────────────────────────
+  // —————————— Length (base: metre) ——————————
   {
     base: 'm',
     units: [
@@ -1516,6 +1589,14 @@ const UNIT_CATEGORIES = [
         toBase: x => x.dividedBy('1e15'), fromBase: x => x.times('1e15') },
       { aliases: ['am', 'attometre', 'attometres', 'attometer', 'attometers'],
         toBase: x => x.dividedBy('1e18'), fromBase: x => x.times('1e18') },
+      { aliases: ['zm', 'zeptometre', 'zeptometres', 'zeptometer', 'zeptometers'],
+        toBase: x => x.dividedBy('1e21'), fromBase: x => x.times('1e21') },
+      { aliases: ['ym', 'yoctometre', 'yoctometres', 'yoctometer', 'yoctometers'],
+        toBase: x => x.dividedBy('1e24'), fromBase: x => x.times('1e24') },
+      { aliases: ['rm', 'rontometre', 'rontometres', 'rontometer', 'rontometers'],
+        toBase: x => x.dividedBy('1e27'), fromBase: x => x.times('1e27') },
+      { aliases: ['qm', 'quectometre', 'quectometres', 'quectometer', 'quectometers'],
+        toBase: x => x.dividedBy('1e30'), fromBase: x => x.times('1e30') },
       { aliases: ['å', 'angstrom', 'angstroms', 'ångström'],
         toBase: x => x.dividedBy('1e10'), fromBase: x => x.times('1e10') },
       { aliases: ['mi', 'mile', 'miles'],
@@ -1530,13 +1611,21 @@ const UNIT_CATEGORIES = [
         toBase: x => x.times('1852'), fromBase: x => x.dividedBy('1852') },
       { aliases: ['ly', 'light year', 'light years', 'lightyear', 'lightyears'],
         toBase: x => x.times('9.4607304725808e15'), fromBase: x => x.dividedBy('9.4607304725808e15') },
+      { aliases: ['sr', 'solar radius', 'solar radii', 'r⊙'],
+        toBase: x => x.times('695700000'), fromBase: x => x.dividedBy('695700000') },
       { aliases: ['au', 'astronomical unit', 'astronomical units'],
         toBase: x => x.times('149597870700'), fromBase: x => x.dividedBy('149597870700') },
       { aliases: ['pc', 'parsec', 'parsecs'],
         toBase: x => x.times('3.0856775814913673e16'), fromBase: x => x.dividedBy('3.0856775814913673e16') },
+      { aliases: ['kpc', 'kiloparsec', 'kiloparsecs'],
+        toBase: x => x.times('3.0856775814913673e19'), fromBase: x => x.dividedBy('3.0856775814913673e19') },
+      { aliases: ['mpc', 'megaparsec', 'megaparsecs'],
+        toBase: x => x.times('3.0856775814913673e22'), fromBase: x => x.dividedBy('3.0856775814913673e22') },
+      { aliases: ['gpc', 'gigaparsec', 'gigaparsecs'],
+        toBase: x => x.times('3.0856775814913673e25'), fromBase: x => x.dividedBy('3.0856775814913673e25') },
     ],
   },
-  // ── Mass (base: gram) ────────────────────────────────────────────────────────
+  // —————————— Mass (base: gram) ——————————
   {
     base: 'g',
     units: [
@@ -1560,7 +1649,7 @@ const UNIT_CATEGORIES = [
         toBase: x => x.dividedBy(5), fromBase: x => x.times(5) },
     ],
   },
-  // ── Temperature ──────────────────────────────────────────────────────────────
+  // —————————— Temperature ——————————
   {
     base: 'c',
     units: [
@@ -1577,7 +1666,7 @@ const UNIT_CATEGORIES = [
         fromBase: x => x.times(9).dividedBy(5).plus('491.67') },
     ],
   },
-  // ── Volume (base: litre) ─────────────────────────────────────────────────────
+  // —————————— Volume (base: litre) ——————————
   {
     base: 'l',
     units: [
@@ -1625,7 +1714,7 @@ const UNIT_CATEGORIES = [
         toBase: x => x.times('0.2365882365'), fromBase: x => x.dividedBy('0.2365882365') },
     ],
   },
-  // ── Speed (base: m/s) ────────────────────────────────────────────────────────
+  // —————————— Speed (base: m/s) ——————————
   {
     base: 'm/s',
     units: [
@@ -1653,7 +1742,7 @@ const UNIT_CATEGORIES = [
         toBase: x => x.times('0.514444'), fromBase: x => x.dividedBy('0.514444') },
     ],
   },
-  // ── Area (base: m²) ──────────────────────────────────────────────────────────
+  // —————————— Area (base: m²) ——————————
   {
     base: 'm2',
     units: [
@@ -1685,7 +1774,7 @@ const UNIT_CATEGORIES = [
         toBase: x => x.times('0.00064516'), fromBase: x => x.dividedBy('0.00064516') },
     ],
   },
-  // ── Time (base: second) ──────────────────────────────────────────────────────
+  // —————————— Time (base: second) ——————————
   {
     base: 's',
     units: [
@@ -1719,7 +1808,7 @@ const UNIT_CATEGORIES = [
         toBase: x => x.times('3155760000'), fromBase: x => x.dividedBy('3155760000') },
     ],
   },
-  // ── Energy (base: joule) ─────────────────────────────────────────────────────
+  // —————————— Energy (base: joule) ——————————
   {
     base: 'j',
     units: [
@@ -1751,7 +1840,7 @@ const UNIT_CATEGORIES = [
         toBase: x => x.times('1055.05585262'), fromBase: x => x.dividedBy('1055.05585262') },
     ],
   },
-  // ── Power (base: watt) ───────────────────────────────────────────────────────
+  // —————————— Power (base: watt) ——————————
   {
     base: 'w',
     units: [
@@ -1773,7 +1862,7 @@ const UNIT_CATEGORIES = [
         toBase: x => x.times('735.49875'), fromBase: x => x.dividedBy('735.49875') },
     ],
   },
-  // ── Pressure (base: pascal) ──────────────────────────────────────────────────
+  // —————————— Pressure (base: pascal) ——————————
   {
     base: 'pa',
     units: [
@@ -1801,14 +1890,36 @@ const UNIT_CATEGORIES = [
         toBase: x => x.times('133.322387415'), fromBase: x => x.dividedBy('133.322387415') },
     ],
   },
-  // ── Digital Storage (base: byte) ─────────────────────────────────────────────
+  // —————————— Digital Storage (base: byte) ——————————
   {
     base: 'b',
     units: [
       { aliases: ['b', 'byte', 'bytes'],
         toBase: x => x, fromBase: x => x },
+
+      // —————————— Bit (base unit, decimal) ——————————
+      // NOTE: bit abbreviations use the 'bit' suffix (kbit, mbit, ...) rather
+      // than bare 'kb', 'mb', etc., since those are already taken by the byte
+      // units above and everything here is lowercase (no Kb vs KB distinction
+      // available to disambiguate).
       { aliases: ['bit', 'bits'],
         toBase: x => x.dividedBy(8), fromBase: x => x.times(8) },
+      { aliases: ['kbit', 'kilobit', 'kilobits'],
+        toBase: x => x.times(125), fromBase: x => x.dividedBy(125) },
+      { aliases: ['mbit', 'megabit', 'megabits'],
+        toBase: x => x.times('1.25e5'), fromBase: x => x.dividedBy('1.25e5') },
+      { aliases: ['gbit', 'gigabit', 'gigabits'],
+        toBase: x => x.times('1.25e8'), fromBase: x => x.dividedBy('1.25e8') },
+      { aliases: ['tbit', 'terabit', 'terabits'],
+        toBase: x => x.times('1.25e11'), fromBase: x => x.dividedBy('1.25e11') },
+      { aliases: ['pbit', 'petabit', 'petabits'],
+        toBase: x => x.times('1.25e14'), fromBase: x => x.dividedBy('1.25e14') },
+      { aliases: ['ebit', 'exabit', 'exabits'],
+        toBase: x => x.times('1.25e17'), fromBase: x => x.dividedBy('1.25e17') },
+      { aliases: ['zbit', 'zettabit', 'zettabits'],
+        toBase: x => x.times('1.25e20'), fromBase: x => x.dividedBy('1.25e20') },
+
+      // —————————— Byte (decimal, SI) ——————————
       { aliases: ['kb', 'kilobyte', 'kilobytes'],
         toBase: x => x.times(1000), fromBase: x => x.dividedBy(1000) },
       { aliases: ['mb', 'megabyte', 'megabytes'],
@@ -1823,6 +1934,8 @@ const UNIT_CATEGORIES = [
         toBase: x => x.times('1e18'), fromBase: x => x.dividedBy('1e18') },
       { aliases: ['zb', 'zettabyte', 'zettabytes'],
         toBase: x => x.times('1e21'), fromBase: x => x.dividedBy('1e21') },
+
+      // —————————— Byte (binary, IEC) ——————————
       { aliases: ['kib', 'kibibyte', 'kibibytes'],
         toBase: x => x.times(1024), fromBase: x => x.dividedBy(1024) },
       { aliases: ['mib', 'mebibyte', 'mebibytes'],
@@ -1833,11 +1946,21 @@ const UNIT_CATEGORIES = [
         toBase: x => x.times('1099511627776'), fromBase: x => x.dividedBy('1099511627776') },
       { aliases: ['pib', 'pebibyte', 'pebibytes'],
         toBase: x => x.times('1125899906842624'), fromBase: x => x.dividedBy('1125899906842624') },
-      { aliases: ['bit', 'bits'],
-        toBase: x => x.dividedBy(8), fromBase: x => x.times(8) },
+
+      // —————————— Bit (binary, IEC) ——————————
+      { aliases: ['kibit', 'kibibit', 'kibibits'],
+        toBase: x => x.times(128), fromBase: x => x.dividedBy(128) }, // 1024 bits / 8
+      { aliases: ['mibit', 'mebibit', 'mebibits'],
+        toBase: x => x.times(131072), fromBase: x => x.dividedBy(131072) },
+      { aliases: ['gibit', 'gibibit', 'gibibits'],
+        toBase: x => x.times('134217728'), fromBase: x => x.dividedBy('134217728') },
+      { aliases: ['tibit', 'tebibit', 'tebibits'],
+        toBase: x => x.times('137438953472'), fromBase: x => x.dividedBy('137438953472') },
+      { aliases: ['pibit', 'pebibit', 'pebibits'],
+        toBase: x => x.times('140737488355328'), fromBase: x => x.dividedBy('140737488355328') },
     ],
   },
-  // ── Angle (base: radian) ─────────────────────────────────────────────────────
+  // —————————— Angle (base: radian) ——————————
   {
     base: 'rad',
     units: [
@@ -1860,7 +1983,7 @@ const UNIT_CATEGORIES = [
         fromBase: x => new BigNumber(x.toString()).times('648000').dividedBy(_getPI().toString()) },
     ],
   },
-  // ── Frequency (base: hertz) ──────────────────────────────────────────────────
+  // —————————— Frequency (base: hertz) ——————————
   {
     base: 'hz',
     units: [
@@ -1894,14 +2017,10 @@ for (const category of UNIT_CATEGORIES) {
 }
 
 
-// ─── RUNTIME VARIABLES ────────────────────────────────────────────────────────
+// —————————— RUNTIME VARIABLES ——————————
+const _defaultVariables = {}; // (old, not currently in use)
 
-const _defaultVariables = {
-  // Built-in constants (pi, e, phi, tau) are now handled as reserved identifiers
-  // in the parser, not as variables, so they recalculate when PRECISION changes.
-};
-
-// ─── FACTORIAL ────────────────────────────────────────────────────────────────
+// —————————— FACTORIAL ——————————
 function factorialBinSplit(n) {
   if (n < 2n) return 1n;
   return productRange(2n, n);
@@ -1950,8 +2069,7 @@ function doubleFactorial(n, sys = 'decimal') {
   return sys == 'integer' ? r : new BigNumber(r.toString());
 }
 
-// ─── FUNCTIONS ────────────────────────────────────────────────────────────────
-
+// —————————— FUNCTIONS ——————————
 const FUNCTIONS = {
   sqrt:  (sys, [a])    => {
     if (sys === 'integer') throw new Error('sqrt() not available with integer calculation');
@@ -2309,8 +2427,8 @@ const FUNCTIONS = {
   },
 };
 
-// ─── PREPROCESSOR ────────────────────────────────────────────────────────────
 
+// —————————— PREPROCESSOR ——————————
 function _processNumToken(token, decimalSep, thousandSep) {
   if (decimalSep !== null || thousandSep !== null) {
     const ds = decimalSep || '.', ts = thousandSep || ',';
@@ -2461,7 +2579,7 @@ function _depthAwareNormalise(str, decimalSep, thousandSep) {
   return result;
 }
 
-// ─── TOKENIZER ────────────────────────────────────────────────────────────────
+// —————————— TOKENIZER ——————————
 // Unit aliases are matched greedily, longest-first, by scanning the raw input
 // string directly (including spaces and slashes like "km/h", "sq km").
 // The keyword "to" is only emitted as TOKEN.TO when it appears between two unit
@@ -2486,7 +2604,7 @@ function tokenize(input, sys) {
     // Skip whitespace
     if (/\s/.test(input[i])) { i++; continue; }
 
-    // ── Number ──────────────────────────────────────────────────────────────
+    // —————————— Number ——————————
     if (/[0-9]/.test(input[i]) || (input[i] === '.' && /[0-9]/.test(input[i+1] ?? ''))) {
       let num = '';
       while (i < input.length && /[0-9.]/.test(input[i])) num += input[i++];
@@ -2499,7 +2617,7 @@ function tokenize(input, sys) {
       continue;
     }
 
-    // ── Identifiers, keywords, unit names ───────────────────────────────────
+    // —————————— Identifiers, keywords, unit names ——————————
     if (/[a-zA-Z_]/.test(input[i])) {
       // First collect the plain word identifier to check for keywords/functions.
       let nameStart = i;
@@ -2553,8 +2671,7 @@ function tokenize(input, sys) {
       continue;
     }
 
-    // ── Operators & punctuation ──────────────────────────────────────────────
-
+    // —————————— Operators & punctuation ——————————
     switch (input[i]) {
       case '+': tokens.push({ type: TOKEN.PLUS });    i++; break;
       case '-': tokens.push({ type: TOKEN.MINUS });   i++; break;
@@ -2583,7 +2700,7 @@ function tokenize(input, sys) {
 }
 
 
-// ─── PARSER ───────────────────────────────────────────────────────────────────
+// —————————— PARSER ——————————
 // Grammar (highest to lowest precedence):
 //
 //   expr           → conversion
@@ -2929,8 +3046,7 @@ function createParser(tokens, trigMode, sys) {
 }
 
 
-// ─── CALCULATOR FACTORY ───────────────────────────────────────────────────────
-
+// —————————— CALCULATOR CREATION ——————————
 function createCalculator() {
   const variables = Object.assign(window.settings.getVariables(), _defaultVariables);
 
@@ -3057,33 +3173,12 @@ function calculate(formula, options = {}) {
   return _defaultCalc.calculate(formula, options);
 }
 
-function setBypassLimits(val) {
-  BYPASS_LIMITS = !!val;
-}
-
-function getBypassLimits() {
-  return BYPASS_LIMITS;
-}
-
 function setPrecision(val) {
   return _defaultCalc.setPrecision(val);
 }
 
 function getPrecision() {
   return _defaultCalc.getPrecision();
-}
-
-function addUnitCategory(category) {
-  UNIT_CATEGORIES.push(category);
-  for (const unit of category.units) {
-    for (const alias of unit.aliases) {
-      _unitAliasMap.set(alias.toLowerCase(), {
-        toBase:   unit.toBase,
-        fromBase: unit.fromBase,
-        category,
-      });
-    }
-  }
 }
 
 function formatBigInt(n, format) {
@@ -3129,16 +3224,18 @@ function bigIntToSciNotation(n) {
 
 updateVariables();
 refreshVariables();
-if (window.settings.getVariablesVisible() == false) {varVis(false)};
-if (window.settings.getCalcFormatted(1) == true) {calc1.children[5].style.background = "var(--pricol)"};
-if (window.settings.getCalcFormatted(2) == true) {calc2.children[5].style.background = "var(--pricol)"};
-if (window.settings.getCalcFormatted(3) == true) {calc3.children[5].style.background = "var(--pricol)"};
-if (window.settings.getCalcFormatted(4) == true) {calc4.children[5].style.background = "var(--pricol)"};
-if (window.settings.getCalcFormatted(5) == true) {calc5.children[5].style.background = "var(--pricol)"};
-if (window.settings.getCalcFormatted(6) == true) {calc6.children[5].style.background = "var(--pricol)"};
+if (window.settings.getVariablesVisible() === false) {varVis(false)};
+if (window.settings.getCalcFormatted(1) === true) {calc1.children[5].style.background = "var(--pricol)"};
+if (window.settings.getCalcFormatted(2) === true) {calc2.children[5].style.background = "var(--pricol)"};
+if (window.settings.getCalcFormatted(3) === true) {calc3.children[5].style.background = "var(--pricol)"};
+if (window.settings.getCalcFormatted(4) === true) {calc4.children[5].style.background = "var(--pricol)"};
+if (window.settings.getCalcFormatted(5) === true) {calc5.children[5].style.background = "var(--pricol)"};
+if (window.settings.getCalcFormatted(6) === true) {calc6.children[5].style.background = "var(--pricol)"};
 
+// On startup: focus on calculator 1 formula input
 setTimeout(function() {document.getElementById('loader').remove();calc1Formula.focus()}, 150)
 
+// —————————— FORMULA AND RESULT LOGGING ——————————
 setInterval(() => {
   const t = Date.now();
   const lastH = window.calchistory.get(0) || {formula:"", fullresult:"", result:"", calc:"calc1", precision:PRECISION, time:0, date:Date.now(), version:currentVersion, sys:window.settings.getCalcSys()};
