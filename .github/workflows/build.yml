@@ -11,6 +11,7 @@ on:
         default: 'true'
 jobs:
   build:
+    if: startsWith(github.event.head_commit.message, 'Release Mathmetic') || (github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true')
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -72,7 +73,6 @@ jobs:
             out/make/*.rpm
 
       - name: Create Git tag for Release
-        if: startsWith(github.event.head_commit.message, 'Release') || github.event.inputs.release == 'true'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -86,7 +86,6 @@ jobs:
           fi
 
       - name: Create GitHub Release and upload assets
-        if: startsWith(github.event.head_commit.message, 'Release') || github.event.inputs.release == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.set-version.outputs.VERSION }}
