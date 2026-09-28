@@ -10,6 +10,11 @@ html, body {
   background: var(--bgcol);
 }
 
+.preload * {
+  transition: none !important;
+  animation-duration: none !important;
+}
+
 /* —————————— TEXT SELECTIONS —————————— */
 ::selection {
   background: var(--wincol-lighten);

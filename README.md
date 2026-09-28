@@ -13,11 +13,10 @@ Completely free to use (even for commercial use), Mathmetic aims to be a reliabl
 
 ## 🚀 Latest Updates!
 
-Mathmetic is now fully open-source so anyone can contribute! Publishing new versions will be handled by BlenderTimer and will probably only come around once a month AT MOST.
+***NOTE:** These updates may not yet be available in the current build. You can view all the updates of the latest version [here](https://github.com/BlenderTimer/Mathmetic/releases/latest).*
 
-### New features
-- **New length conversion units: `solar radii`, `kiloparsecs`, `megaparsecs`, `gigaparsecs`, `zeptometer`, `yoctometer`, `rontometer`, `quectometer`** - *added additional units to the conversion database.*
-- **New digital storage conversion units: `kilobit`, `kibibit`, `megabit`, `mebibit`, `gigabit`, `gibibit`, `terabit`, `tebibit`, `petabit`, `pebibit`, `exabit`, `zettabit`** - *added additional units to the conversion database.*
+### New features and improvements
+*- **Optimized bootup time** - *improved the poor loading system so the software now boots around 150ms faster**
 
 ### Bug fixes
 
@@ -25,9 +24,7 @@ Mathmetic is now fully open-source so anyone can contribute! Publishing new vers
 
 ***Minor Code Changes***
 
-- *Added `r⊙` to `solar radii` variations*
-- Removed duplicate `bit` from conversion table
-- Lots of comments added and overall code cleanup
+*none*
 
 ---
 

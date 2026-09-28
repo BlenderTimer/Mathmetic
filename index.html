@@ -5,10 +5,9 @@
     <title>Mathmetic</title>
 		<link rel="icon" href="/assets/icon.png" type="image/x-icon">
   </head>
-  <body style="overflow: hidden;">
-    <div id="loader" style="background: #0f172a; position: absolute; top: 0; bottom: 0; left: 0; right: 0; z-index: 9999999"></div>
+  <body style="overflow: hidden; background: #0f172a;" class="preload">
     <!-- —————————————————— ABOUT/HELP —————————————————— -->
-    <div id="about-window" class="window">
+    <div id="about-window" class="window" style="display: none;">
       <button class="exit-window"><img src="./img/x-spaced.svg" alt="Close about"></button>
       <!-- DONATE -->
       <div id="donate">
@@ -122,7 +121,7 @@
       </div>
     </div>
     <!-- —————————————————— SETTINGS —————————————————— -->
-    <div id="settings-window" class="window">
+    <div id="settings-window" class="window" style="display: none;">
       <button class="exit-window"><img src="./img/x-spaced.svg" alt="Close settings"></button>
       <!-- CALCULATIONS -->
       <div id="calculations-settings" class="window-group">
@@ -144,7 +143,7 @@
       </div>
     </div>
     <!-- —————————————————— HISTORY —————————————————— -->
-    <div id="history-window" class="window">
+    <div id="history-window" class="window" style="display: none;">
       <!-- HISTORY MENUBAR -->
       <div class="window-menubar">
         <button class="exit-window"><img src="./img/x-spaced.svg" alt="Close history"></button>
@@ -167,7 +166,7 @@
       </div>
     </div>
     <!-- —————————————————— MENUBAR —————————————————— -->
-    <div id="menubar">
+    <div id="menubar" style="display: none;">
       <!-- LEFT MENUBAR ITEMS -->
       <div id="menubar-left">
         <div id="trig-mode" class="biselector"><button>deg</button><button>rad</button></div>
@@ -182,7 +181,7 @@
       </div>
     </div>
     <!-- —————————————————— MAIN UI —————————————————— -->
-    <div id="main-ui">
+    <div id="main-ui" style="display: none;">
       <!-- VARIABLES PANEL -->
       <div id="variables">
         <h2>VARIABLES</h2>

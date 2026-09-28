@@ -3233,7 +3233,17 @@ if (window.settings.getCalcFormatted(5) === true) {calc5.children[5].style.backg
 if (window.settings.getCalcFormatted(6) === true) {calc6.children[5].style.background = "var(--pricol)"};
 
 // On startup: focus on calculator 1 formula input
-setTimeout(function() {document.getElementById('loader').remove();calc1Formula.focus()}, 150)
+window.addEventListener('DOMContentLoaded', () => {
+	requestAnimationFrame(() => {
+    document.getElementById('about-window').removeAttribute('style');
+    document.getElementById('settings-window').removeAttribute('style');
+    document.getElementById('history-window').removeAttribute('style');
+    document.getElementById('menubar').removeAttribute('style');
+    document.getElementById('main-ui').style.display = null;
+    document.body.classList.remove('preload');
+    calc1Formula.focus();
+	});
+});
 
 // —————————— FORMULA AND RESULT LOGGING ——————————
 setInterval(() => {
